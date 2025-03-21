@@ -1,0 +1,6 @@
+Frontend em React + VITE para a aplicação de gestão de horários do grupo E
+
+
+Após clonar o repositório:
+1. entrar na pasta app-horarios.
+2. atualizar as dependências necessários com o comando npm install. 
