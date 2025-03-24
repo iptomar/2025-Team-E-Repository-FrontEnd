@@ -1,13 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Login from './Login';  // Correct import from the same directory
+import Login from './login.jsx';  
+import usePreventZoom from "./lib/utils/utils.js";
 import './App.css';
 
 function App() {
+  usePreventZoom();  
+
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Login />} />  {/* Login page at the root path */}
+        {/* Define the path for the Login page */}
+        <Route path="/" element={<Login />} />
       </Routes>
     </Router>
   );

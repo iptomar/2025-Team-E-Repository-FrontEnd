@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import "./Login.css"; 
+import "./login.css"; 
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  let [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    email += '@ipt.pt';
     if (!email || !password) {
       setErrorMessage("Por favor, preencha todos os campos.");
     } else {
@@ -29,7 +29,7 @@ const Login = () => {
           <div className="input-group">
             <div className="email-container">
               <input
-                type="email"
+                type="text"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
