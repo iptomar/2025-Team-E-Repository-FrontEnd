@@ -18,6 +18,7 @@ const createWebSocketClient = () => {
         on: (event, callback) => socket.on(event, callback),
         emit: (event, data) => socket.emit(event, data),
         getSocket: () => socket,
+        off: (event, callback) => socket.off(event,callback),
     };
 };
 
