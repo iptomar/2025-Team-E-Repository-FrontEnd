@@ -3,8 +3,11 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from './login.jsx';  
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
+import { useWebSocket } from './lib/websocket/hooks.jsx';
 
 function App() {
+  const{isConnected}=useWebSocket();
+  print(isConnected)
   return (
     <Router>
       <Routes>
