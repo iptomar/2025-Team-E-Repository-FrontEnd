@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import './login.css';
+import './styles/main.scss';
+
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -20,6 +21,7 @@ const Login = () => {
         className="login-image"
       />
       <div className="form-container">
+        <h1>Entrar na plataforma de horários</h1>
         <form className="d-flex flex-column" onSubmit={handleSubmit}>
           <input
             type="email"
@@ -39,7 +41,6 @@ const Login = () => {
           <button
             type="submit"
             className="btn btn-primary btn-lg mx-auto"
-            style={{ width: '30%' }}
           >
             Entrar
           </button>

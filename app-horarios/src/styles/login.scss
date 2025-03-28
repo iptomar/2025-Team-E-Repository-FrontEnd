@@ -1,0 +1,50 @@
+// Estilos específicos da página de login
+@import './variables';
+
+.login-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+}
+  
+.form-container {
+    position: relative;
+    width: 80%;    
+    border: solid 1px black;
+}
+
+.container-fluid {
+    display: flex;
+    justify-content: flex-end; 
+    height: 100vh;  
+}
+
+h2 {
+    font-family: Tahoma, sans-serif;
+    font-size: 30px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+h1 {
+    font-family: $font-family;
+    font-size: $h1-size;
+    font-weight: $font-semibold;
+}
+
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.form-container button{
+    background-color: $primary-main-color;
+}
+
+.form-container button:hover {
+    background-color: $hover-state-color;
+}
+
+  

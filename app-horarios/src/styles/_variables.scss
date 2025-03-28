@@ -1,0 +1,49 @@
+// Variáveis globais (cores, espaçamentos, etc.)
+
+// Cores principais
+$primary-main-color: #CC6600; // buttons, links, accents
+$hover-state-color: #D78737;
+
+// Cores secundárias
+$secondary-color: #7BC043; // Tags, highlights
+$light-BG-color: #BDE0A1;
+
+// Cores Texto 
+$primary-text-color: #333333;
+$secondary-text-color: #666666;
+$placeholder-text: #999999;
+$lightmode-text-color: #FFFFFF;
+
+
+$background-color: #f8f9fa;
+
+// Tipografia
+$h1-size: 40px;             // Page titles
+$h2-size: 32px;             // Section Titles
+$body-regular-size: 16px;   //Main paragraph text
+$body-small-size: 14px;     // Secondary text, descriptions
+$caption-small-size: 12px;  // Labels, helper text
+$button-text-size: 24px;    // Button text
+
+// Font family
+$font-family: 'Lato', sans-serif;
+
+// Pesos de fonte
+$font-light: 300;
+$font-regular: 400;
+$font-medium: 500;
+$font-semibold: 600;
+$font-bold: 700; 
+
+// Spacing
+$extra-small-spacing: 4px;
+$small-spacing: 8px;
+$medium-spacing: 16px;
+$large-spacing: 24px;
+$extra-large-spacing: 32px;
+
+// Botões Radius
+$sm-border-radius: 4px;
+$md-border-radius: 8px;
+$lg-border-radius: 16px;
+$full-border-radius: 999px;
