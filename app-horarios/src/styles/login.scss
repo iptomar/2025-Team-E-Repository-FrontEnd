@@ -1,5 +1,5 @@
 // Estilos específicos da página de login
-@import './variables';
+@use 'variables' as *;
 
 .login-image {
     position: absolute;
