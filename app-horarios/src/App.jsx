@@ -6,7 +6,7 @@ import { useWebSocket } from './lib/websocket/hooks.jsx';
 
 function App() {
   const{isConnected}=useWebSocket();
-  print(isConnected)
+  console.log(isConnected);
   return (
     <Router>
       <Routes>
