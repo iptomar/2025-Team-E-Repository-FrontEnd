@@ -3,4 +3,4 @@
 @use './variables' as *;
 @use './login.scss';
 // Atenção, o import do BS deve ser feito depois de todos os outros
-@use 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap/dist/css/bootstrap.min.css';
