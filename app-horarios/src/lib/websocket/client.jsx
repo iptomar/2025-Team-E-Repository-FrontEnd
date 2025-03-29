@@ -1,9 +1,11 @@
 import {io} from 'socket.io-client';
 
 const createWebSocketClient = () => {
-    // Initializa o Socket.Io do lado client e config
-    // O VITE obtém o URL do WebSocket por variavel no env
-    // a variavel vai apontar para o URL do servidor
+    /* Initializa o Socket.Io do lado client e config
+    / O VITE obtém o URL do WebSocket por variavel no env
+    / a variavel vai apontar para o URL do servidor
+    / A boa prática é no futuro em produção inicar o servidor com
+    / o comando seguinte:$env:VITE_WS_URL=""; npm run dev */
     const socket = io(import.meta.env.VITE_WS_URL, {
         autoConnect: false,
         reconnection: true,
