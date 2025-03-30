@@ -1,0 +1,65 @@
+// Estilos específicos da página de login
+@use 'variables' as *;
+
+.login-image {
+    width: 110%;     
+    height: 100vh;     
+    object-fit: cover; 
+    display: block;
+
+    @media (max-width: 768px) { 
+        height: 40vh; 
+    }
+}
+
+.form-container {
+    width: 80%;
+    padding: 20px;
+    background-color: #fff;
+
+    @media (max-width: 768px) { 
+        width: 90%; 
+    }
+}
+
+.container-fluid {
+    height: 100vh; 
+}
+
+h1 {
+    color: $primary-text-color;
+    font-family: $font-family;
+    font-size: $h1-size;
+    font-weight: $font-semibold;
+}
+
+
+.form-container button{
+    background-color: $primary-main-color;
+    border-color: $primary-main-color;
+    border-radius: $md-border-radius;
+    color: $lightmode-text-color;
+    font-size: $button-text-size;
+    padding: $medium-spacing $large-spacing ;
+    font-weight: $font-medium;
+    width: 121px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;    
+}
+
+.form-container button:hover {
+    background-color: $hover-state-color;
+    border-color:  $hover-state-color;
+}
+
+input::placeholder {
+    color: $placeholder-text;
+}
+
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin-top: 10px;
+}

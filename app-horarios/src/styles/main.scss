@@ -1,0 +1,6 @@
+// Importa todos os estilos
+
+@use './variables' as *;
+@use './login.scss';
+// Atenção, o import do BS deve ser feito depois de todos os outros
+@import 'bootstrap/dist/css/bootstrap.min.css';

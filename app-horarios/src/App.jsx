@@ -1,13 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from './login.jsx';  
-import usePreventZoom from "./lib/utils/utils.js";
-import { useWebSocket } from './lib/websocket/hooks.jsx';
 import './App.css';
+import { useWebSocket } from './lib/websocket/hooks.jsx';
+
 function App() {
-  usePreventZoom();  
-    const{isConnected}=useWebSocket();
-    console.log(isConnected);
+  const{isConnected}=useWebSocket();
+  console.log(isConnected);
   return (
     <Router>
       <Routes>
