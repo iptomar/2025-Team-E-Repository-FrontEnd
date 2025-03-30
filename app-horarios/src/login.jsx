@@ -22,7 +22,7 @@ const Login = () => {
               className="login-image"
             />
           </div>
-
+          
           <div className="col-md-8 d-flex align-items-center justify-content-center bg-white">
             <div className="form-container">
               <h1 className="mb-5">Entrar na plataforma de horários</h1>
