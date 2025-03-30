@@ -6,12 +6,20 @@
     height: 100vh;     
     object-fit: cover; 
     display: block;
+
+    @media (max-width: 768px) { 
+        height: 40vh; 
+    }
 }
 
 .form-container {
     width: 80%;
     padding: 20px;
     background-color: #fff;
+
+    @media (max-width: 768px) { 
+        width: 90%; 
+    }
 }
 
 .container-fluid {
