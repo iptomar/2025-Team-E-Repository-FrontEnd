@@ -1,14 +1,26 @@
 import React, { useState } from 'react';
 import './styles/main.scss';
+import {useNavigate} from 'react-router-dom'
+import {login} from '../src/api/authFetcher';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Lógica de autenticação
+
+    try {
+      const data = await login(email, password);
+      localStorage.setItem('token', data.token); // guarda o token
+      console.log(data);
+      navigate('/calendario');
+    } catch (err) {
+      console.log(err.message);
+      setErrorMessage(err.message);
+    }
   };
 
   return (

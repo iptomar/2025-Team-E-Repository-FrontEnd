@@ -1,8 +1,7 @@
-const API_BASE = process.env.REACT_APP_API_BASE
-
+const API_BASE = import.meta.env.VITE_WS_URL;
 
 export const login = async (email, password) => {
-    const response = await fetch(`${API_BASE}/login`, {
+    const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -11,12 +10,13 @@ export const login = async (email, password) => {
     });
     
     const data = await response.json();
+    console.log(data);
 
     if(!response.ok) {
         throw new Error(data.message || 'Erro ao fazer o login');
     }
 
-    return data
+    return data;
 };
 
 
