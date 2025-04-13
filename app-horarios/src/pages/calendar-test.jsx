@@ -1,5 +1,5 @@
-﻿import '@fullcalendar/core';
-import React, { useState, useEffect, useRef } from 'react';
+﻿import '@fullcalendar/core'; // Add this line first
+import React, {useState, useEffect, useRef} from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Badge } from 'react-bootstrap';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -9,83 +9,6 @@ import Modal from 'react-bootstrap/Modal';
 import iptLogo from '../assets/ipt-logo-full.png';
 import axios from 'axios';
 
-// Custom CSS for IPT styling
-const iptStyles = {
-    mainContainer: {
-        backgroundColor: '#ffffff',
-        padding: '20px',
-        maxWidth: '1200px',
-        margin: '0 auto',
-    },
-    headerText: {
-        color: '#b25d31',
-        marginBottom: '30px',
-        fontWeight: '500',
-    },
-    card: {
-        border: '1px solid #e0e0e0',
-        borderRadius: '4px',
-        boxShadow: 'none',
-    },
-    cardHeader: {
-        backgroundColor: '#f8f9fa',
-        color: '#b25d31',
-        fontWeight: '500',
-        border: 'none',
-    },
-    button: {
-        backgroundColor: '#b25d31',
-        borderColor: '#b25d31',
-        color: 'white',
-        fontWeight: '400',
-    },
-    formControl: {
-        border: '1px solid #ced4da',
-        borderRadius: '4px',
-        padding: '8px 12px',
-    },
-    logoContainer: {
-        display: 'flex',
-        alignItems: 'center',
-        height: '100px',
-    },
-    logo: {
-        maxHeight: '100%',
-        height: '100%',
-        width: 'auto',
-    },
-    instituteName: {
-        marginLeft: '15px',
-        color: '#333',
-    }
-};
-
-// API service functions
-// Define your JWT token
-const API_TOKEN = 'YOUR_HARDCODED_TOKEN';
-
-// API service functions using the token constant
-const api = {
-    getSubjects: () => axios.get('/api/subjects', {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
-    }),
-    getClassrooms: () => axios.get('/api/classrooms', {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
-    }),
-    getSchedule: (scheduleId) => axios.get(`/schedules/${scheduleId}`, {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
-    }),
-    saveBlock: (scheduleId, blockData) => axios.post(`/schedules/${scheduleId}/blocks`, blockData, {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
-    }),
-    updateBlock: (blockId, blockData) => axios.put(`/schedules/blocks/${blockId}`, blockData, {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
-    }),
-    deleteBlock: (blockId) => axios.delete(`/schedules/blocks/${blockId}`, {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
-    })
-};
-
 
 /**
  * WeeklySchedule Component
@@ -94,157 +17,73 @@ const api = {
  * the IPT (Instituto Politécnico de Tomar) design style.
  */
 export default function WeeklySchedule() {
-    // State for subjects, classrooms, and schedule data
-    const [subjects, setSubjects] = useState([]);
-    const [classrooms, setClassrooms] = useState([]);
-    const [schedule, setSchedule] = useState(null);
-    const [blocks, setBlocks] = useState([]);
-
-    // State for currently selected subject
-    const [currentSubject, setCurrentSubject] = useState(null);
-
-    // State for validation messages
+    const [courses, setCourses] = useState([]);
+    const [rooms, setRooms] = useState([
+        { id: 1, name: 'B257' },
+        { id: 2, name: 'B128' },
+        { id: 3, name: 'B255' },
+        { id: 4, name: 'I184' },
+    ]);
+    const [events, setEvents] = useState([]);
+    const [currentCourse, setCurrentCourse] = useState(null);
     const [message, setMessage] = useState({ text: '', type: '' });
-
-    // State to check if schedule is complete
     const [scheduleComplete, setScheduleComplete] = useState(false);
-
-    // State for room selection modal
     const [showRoomModal, setShowRoomModal] = useState(false);
-    const [selectedBlock, setSelectedBlock] = useState(null);
-    const [selectedClassroom, setSelectedClassroom] = useState('');
-
-    // Loading and error states
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [selectedRoom, setSelectedRoom] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    // Calendar reference
     const calendarRef = useRef(null);
 
-    // Fetch initial data
+    // Fetch subjects from backend on component mount
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchSubjects = async () => {
             try {
-                setLoading(true);
+                const response = await axios.get('http://localhost:3001/api/admin/subjects-professors', {
+                    headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
 
-                // Get schedule ID from URL or props
-                const scheduleId = new URLSearchParams(window.location.search).get('scheduleId');
+                console.log('Cadeiras recebidas (funciona pfv):', response.data);
+            
+                const colorPalette = ['#b25d31', '#5d9b42', '#4285f4', '#aa46bb', '#f4b400'];
 
-                if (!scheduleId) {
-                    throw new Error('Schedule ID is required');
-                }
-
-                // Fetch data in parallel
-                const [subjectsRes, classroomsRes, scheduleRes] = await Promise.all([
-                    api.getSubjects(),
-                    api.getClassrooms(),
-                    api.getSchedule(scheduleId)
-                ]);
-
-                // Process subjects data to include color and allocated hours
-                const processedSubjects = subjectsRes.data.map((subject, index) => ({
-                    ...subject,
-                    allocatedHours: 0, // Will be calculated based on blocks
-                    color: getSubjectColor(index) // Assign colors
+                const transformed = response.data.map((subject, index) => ({
+                    id: subject.Id,
+                    name: subject.Subject,  
+                    requiredHours: Math.floor(subject.TotalHours / 15) || 3,
+                    allocatedHours: 0,
+                    color: colorPalette[index % colorPalette.length],
                 }));
-
-                setSubjects(processedSubjects);
-                setClassrooms(classroomsRes.data);
-                setSchedule(scheduleRes.data);
-
-                // Convert blocks to calendar events
-                if (scheduleRes.data.blocks && scheduleRes.data.blocks.length > 0) {
-                    const events = convertBlocksToEvents(
-                        scheduleRes.data.blocks,
-                        processedSubjects,
-                        classroomsRes.data
-                    );
-                    setBlocks(events);
-
-                    // Calculate allocated hours based on blocks
-                    updateAllocatedHours(processedSubjects, scheduleRes.data.blocks);
-                }
-
-                setLoading(false);
+            
+                setCourses(transformed);
+                setError(null);
+                setLoading(false); 
             } catch (err) {
-                setError(err.message);
-                setLoading(false);
+                setError(err.response?.data?.error || err.message);
+                if (err.response?.status === 403) {
+                    setError('Acesso permitido apenas a administradores');
+                }
+                setLoading(false); 
             }
         };
-
-        fetchData();
+        fetchSubjects();
     }, []);
 
-    // Check if all subjects have their hours allocated and all events have classrooms
     useEffect(() => {
-        if (subjects.length === 0 || blocks.length === 0) return;
-
-        const allAllocated = subjects.every(subject =>
-            subject.allocatedHours >= subject.TotalHours
+        const allAllocated = courses.every(course => 
+            course.allocatedHours >= course.requiredHours
         );
-
-        const allEventsHaveRooms = blocks.every(block =>
-            block.extendedProps.classroomId && block.extendedProps.classroomId !== ''
+        const allEventsHaveRooms = events.every(event => 
+            event.extendedProps.room && event.extendedProps.room !== ''
         );
-
         setScheduleComplete(allAllocated && allEventsHaveRooms);
-    }, [subjects, blocks]);
-
-    // Helper Functions
-    const getSubjectColor = (index) => {
-        const colors = ['#b25d31', '#5d9b42', '#4285f4', '#aa46bb', '#f4b400', '#0f9d58'];
-        return colors[index % colors.length];
-    };
-
-    const convertBlocksToEvents = (blocks, subjects, classrooms) => {
-        return blocks.map(block => {
-            const subject = subjects.find(s => s.Id === block.SubjectFK);
-            const classroom = classrooms.find(c => c.Id === block.ClassroomFK);
-
-            // Format date for FullCalendar
-            const date = new Date(block.Date || schedule.StartDate).toISOString().split('T')[0];
-
-            return {
-                id: block.Id,
-                title: classroom
-                    ? `${subject.Name} - ${classroom.Name}`
-                    : `${subject.Name} (Sem sala)`,
-                start: `${date}T${block.StartHour}`,
-                end: `${date}T${block.EndHour}`,
-                backgroundColor: subject.color,
-                extendedProps: {
-                    subjectId: subject.Id,
-                    classroomId: classroom?.Id || '',
-                    duration: calculateDuration(block.StartHour, block.EndHour),
-                    scheduleFK: block.ScheduleFK
-                }
-            };
-        });
-    };
-
-    const calculateDuration = (startTime, endTime) => {
-        const start = new Date(`2000-01-01T${startTime}`);
-        const end = new Date(`2000-01-01T${endTime}`);
-        return (end - start) / (1000 * 60 * 60); // Convert to hours
-    };
-
-    const updateAllocatedHours = (subjects, blocks) => {
-        const updatedSubjects = [...subjects];
-
-        blocks.forEach(block => {
-            const subjectIndex = updatedSubjects.findIndex(s => s.Id === block.SubjectFK);
-            if (subjectIndex >= 0) {
-                const duration = calculateDuration(block.StartHour, block.EndHour);
-                updatedSubjects[subjectIndex].allocatedHours += duration;
-            }
-        });
-
-        setSubjects(updatedSubjects);
-    };
+    }, [courses, events]);
 
     // Handle date selection in calendar
-    const handleDateSelect = async (selectInfo) => {
-        if (!currentSubject) {
+    const handleDateSelect = (selectInfo) => {
+        if (!currentCourse) {
             setMessage({ text: 'Selecione uma cadeira antes de adicionar ao horário', type: 'warning' });
             selectInfo.view.calendar.unselect();
             return;
@@ -255,11 +94,11 @@ export default function WeeklySchedule() {
         const end = new Date(selectInfo.end);
         const durationHours = (end - start) / (1000 * 60 * 60);
 
-        // Check for overlaps with existing blocks
-        const hasOverlap = blocks.some(block => {
-            const blockStart = new Date(block.start);
-            const blockEnd = new Date(block.end);
-            return (start < blockEnd && end > blockStart);
+        // Check for overlaps with existing events
+        const hasOverlap = events.some(event => {
+            const eventStart = new Date(event.start);
+            const eventEnd = new Date(event.end);
+            return (start < eventEnd && end > eventStart);
         });
 
         if (hasOverlap) {
@@ -268,85 +107,62 @@ export default function WeeklySchedule() {
             return;
         }
 
-        try {
-            const selectedSubject = subjects.find(s => s.Id === currentSubject);
+        // Add event without room initially
+        const selectedCourse = courses.find(c => c.id === currentCourse);
+        const newEvent = {
+            id: Date.now(),
+            title: `${selectedCourse.name} (Sem sala)`,
+            start: selectInfo.startStr,
+            end: selectInfo.endStr,
+            backgroundColor: selectedCourse.color,
+            extendedProps: {
+                courseId: currentCourse,
+                room: '',
+                duration: durationHours
+            }
+        };
 
-            // Prepare block data for API
-            const blockData = {
-                subjectId: currentSubject,
-                startHour: start.toTimeString().substring(0, 8), // Format: HH:MM:SS
-                endHour: end.toTimeString().substring(0, 8)
-            };
+        setEvents([...events, newEvent]);
 
-            // Save to database
-            const response = await api.saveBlock(schedule.Id, blockData);
-            const newBlockId = response.data.id || Date.now(); // Use API response ID or fallback
+        // Update allocated hours
+        setCourses(courses.map(course =>
+            course.id === currentCourse
+                ? { ...course, allocatedHours: course.allocatedHours + durationHours }
+                : course
+        ));
 
-            // Create event for calendar
-            const newEvent = {
-                id: newBlockId,
-                title: `${selectedSubject.Name} (Sem sala)`,
-                start: selectInfo.startStr,
-                end: selectInfo.endStr,
-                backgroundColor: selectedSubject.color,
-                extendedProps: {
-                    subjectId: currentSubject,
-                    classroomId: '',
-                    duration: durationHours,
-                    scheduleFK: schedule.Id
-                }
-            };
-
-            setBlocks([...blocks, newEvent]);
-
-            // Update allocated hours
-            setSubjects(subjects.map(subject =>
-                subject.Id === currentSubject
-                    ? { ...subject, allocatedHours: subject.allocatedHours + durationHours }
-                    : subject
-            ));
-
-            setMessage({ text: `Aula de ${selectedSubject.Name} adicionada. Clique na aula para selecionar uma sala.`, type: 'success' });
-        } catch (error) {
-            setMessage({ text: `Erro ao adicionar aula: ${error.message}`, type: 'danger' });
-        }
-
+        setMessage({ text: `Aula de ${selectedCourse.name} adicionada. Clique na aula para selecionar uma sala.`, type: 'success' });
         selectInfo.view.calendar.unselect();
     };
 
     // Handle event click to open room selection modal
     const handleEventClick = (clickInfo) => {
         const event = clickInfo.event;
-        setSelectedBlock({
-            id: event.id,
-            start: event.start,
-            end: event.end,
-            extendedProps: event.extendedProps
-        });
-        setSelectedClassroom(event.extendedProps.classroomId || '');
+        setSelectedEvent(event);
+        setSelectedRoom(event.extendedProps.room || '');
         setShowRoomModal(true);
     };
 
     // Handle room assignment
-    const handleRoomAssign = async () => {
-        if (!selectedClassroom) {
+    const handleRoomAssign = () => {
+        if (!selectedRoom) {
             setMessage({ text: 'Selecione uma sala para a aula', type: 'warning' });
             return;
         }
 
-        // Check for room conflicts
-        const blockStart = new Date(selectedBlock.start);
-        const blockEnd = new Date(selectedBlock.end);
+        // Check if the selected room is already booked for this time slot
+        const eventStart = new Date(selectedEvent.start);
+        const eventEnd = new Date(selectedEvent.end);
 
-        const roomConflict = blocks.some(block => {
-            if (parseInt(block.id) === parseInt(selectedBlock.id)) return false;
+        const roomConflict = events.some(event => {
+            if (parseInt(event.id) === parseInt(selectedEvent.id)) return false;
 
-            const start = new Date(block.start);
-            const end = new Date(block.end);
+            const start = new Date(event.start);
+            const end = new Date(event.end);
             return (
-                block.extendedProps.classroomId === selectedClassroom &&
-                start < blockEnd &&
-                end > blockStart
+                event.extendedProps.room === selectedRoom &&
+                start < eventEnd &&
+                end > eventStart
             );
         });
 
@@ -355,65 +171,50 @@ export default function WeeklySchedule() {
             return;
         }
 
-        try {
-            // Update block in database
-            await api.updateBlock(selectedBlock.id, {
-                classroomId: selectedClassroom
-            });
+        // Update the event with the selected room
+        const selectedCourse = courses.find(c => c.id === selectedEvent.extendedProps.courseId);
+        const roomName = rooms.find(r => r.id === parseInt(selectedRoom)).name;
 
-            // Update local state
-            const selectedSubject = subjects.find(s => s.Id === selectedBlock.extendedProps.subjectId);
-            const classroomName = classrooms.find(c => c.Id === parseInt(selectedClassroom)).Name;
+        setEvents(events.map(event => {
+            if (parseInt(event.id) === parseInt(selectedEvent.id)) {
+                return {
+                    ...event,
+                    title: `${selectedCourse.name} - ${roomName}`,
+                    extendedProps: {
+                        ...event.extendedProps,
+                        room: selectedRoom
+                    }
+                };
+            }
+            return event;
+        }));
 
-            setBlocks(blocks.map(block => {
-                if (parseInt(block.id) === parseInt(selectedBlock.id)) {
-                    return {
-                        ...block,
-                        title: `${selectedSubject.Name} - ${classroomName}`,
-                        extendedProps: {
-                            ...block.extendedProps,
-                            classroomId: selectedClassroom
-                        }
-                    };
-                }
-                return block;
-            }));
-
-            setShowRoomModal(false);
-            setMessage({ text: `Sala atribuída com sucesso!`, type: 'success' });
-        } catch (error) {
-            setMessage({ text: `Erro ao atribuir sala: ${error.message}`, type: 'danger' });
-        }
+        setShowRoomModal(false);
+        setMessage({ text: `Sala atribuída com sucesso!`, type: 'success' });
     };
 
     // Handle event removal
-    const handleEventRemove = async () => {
-        try {
-            await api.deleteBlock(selectedBlock.id);
+    const handleEventRemove = () => {
+        const courseId = selectedEvent.extendedProps.courseId;
+        const duration = selectedEvent.extendedProps.duration;
 
-            const subjectId = selectedBlock.extendedProps.subjectId;
-            const duration = selectedBlock.extendedProps.duration;
+        // Update allocated hours
+        setCourses(courses.map(course =>
+            course.id === courseId
+                ? { ...course, allocatedHours: Math.max(0, course.allocatedHours - duration) }
+                : course
+        ));
 
-            // Update allocated hours
-            setSubjects(subjects.map(subject =>
-                subject.Id === subjectId
-                    ? { ...subject, allocatedHours: Math.max(0, subject.allocatedHours - duration) }
-                    : subject
-            ));
-
-            setBlocks(blocks.filter(b => parseInt(b.id) !== parseInt(selectedBlock.id)));
-            setShowRoomModal(false);
-            setMessage({ text: 'Aula removida com sucesso!', type: 'info' });
-        } catch (error) {
-            setMessage({ text: `Erro ao remover aula: ${error.message}`, type: 'danger' });
-        }
+        setEvents(events.filter(e => parseInt(e.id) !== parseInt(selectedEvent.id)));
+        setShowRoomModal(false);
+        setMessage({ text: 'Aula removida com sucesso!', type: 'info' });
     };
 
     const saveSchedule = () => {
         // Check if all events have rooms assigned
-        const blocksWithoutRooms = blocks.filter(block => !block.extendedProps.classroomId);
+        const eventsWithoutRooms = events.filter(event => !event.extendedProps.room);
 
-        if (blocksWithoutRooms.length > 0) {
+        if (eventsWithoutRooms.length > 0) {
             setMessage({
                 text: 'Todas as aulas devem ter uma sala atribuída antes de guardar o horário',
                 type: 'warning'
@@ -421,7 +222,18 @@ export default function WeeklySchedule() {
             return;
         }
 
-        setMessage({ text: 'Horário guardado com sucesso!', type: 'success' });
+        alert('Horário guardado com sucesso!');
+
+        const scheduleData = {
+            events: events.map(event => ({
+                courseId: event.extendedProps.courseId,
+                roomId: event.extendedProps.room,
+                start: event.start,
+                end: event.end
+            }))
+        };
+
+        console.log('Schedule data to be saved:', scheduleData);
     };
 
     function renderEventContent(eventInfo) {
@@ -430,28 +242,41 @@ export default function WeeklySchedule() {
                 <b>{eventInfo.timeText}</b>
                 <i>{eventInfo.event.title}</i>
             </>
-        );
+        )
     }
 
-    if (loading) {
+    const renderCoursesList = () => {
+        if (loading) return <Alert variant="info">Carregando cadeiras...</Alert>;
+        if (error) return <Alert variant="danger">{error}</Alert>;
+        
         return (
-            <Container fluid style={iptStyles.mainContainer}>
-                <div className="text-center my-5">
-                    <h3>A carregar dados do horário...</h3>
-                </div>
-            </Container>
+            <Form>
+                {courses.map(course => (
+                    <div key={course.id} className="mb-3">
+                        <Form.Check
+                            type="radio"
+                            id={`course-${course.id}`}
+                            name="course"
+                            label={
+                                <span>
+                                    {course.name}
+                                    <Badge
+                                        bg={course.allocatedHours >= course.requiredHours ? "success" : "warning"}
+                                        className="ms-2"
+                                    >
+                                        {course.allocatedHours}/{course.requiredHours}h
+                                    </Badge>
+                                </span>
+                            }
+                            onChange={() => setCurrentCourse(course.id)}
+                            checked={currentCourse === course.id}
+                        />
+                    </div>
+                ))}
+            </Form>
         );
-    }
+    };
 
-    if (error) {
-        return (
-            <Container fluid style={iptStyles.mainContainer}>
-                <Alert variant="danger">
-                    Erro ao carregar dados: {error}
-                </Alert>
-            </Container>
-        );
-    }
 
     return (
         <Container fluid style={iptStyles.mainContainer}>
@@ -481,30 +306,7 @@ export default function WeeklySchedule() {
                     <Card className="mb-4" style={iptStyles.card}>
                         <Card.Header style={iptStyles.cardHeader}>Cadeiras</Card.Header>
                         <Card.Body>
-                            <Form>
-                                {subjects.map(subject => (
-                                    <div key={subject.Id} className="mb-3">
-                                        <Form.Check
-                                            type="radio"
-                                            id={`subject-${subject.Id}`}
-                                            name="subject"
-                                            label={
-                                                <span>
-                                                    {subject.Name}
-                                                    <Badge
-                                                        bg={subject.allocatedHours >= subject.TotalHours ? "success" : "warning"}
-                                                        className="ms-2"
-                                                    >
-                                                        {subject.allocatedHours}/{subject.TotalHours}h
-                                                    </Badge>
-                                                </span>
-                                            }
-                                            onChange={() => setCurrentSubject(subject.Id)}
-                                            checked={currentSubject === subject.Id}
-                                        />
-                                    </div>
-                                ))}
-                            </Form>
+                            {renderCoursesList()}
                         </Card.Body>
                     </Card>
 
@@ -547,7 +349,7 @@ export default function WeeklySchedule() {
                                 dayMaxEvents={true}
                                 select={handleDateSelect}
                                 eventClick={handleEventClick}
-                                events={blocks}
+                                events={events}
                                 height="auto"
                                 locale="pt"
                                 firstDay={1}
@@ -563,9 +365,10 @@ export default function WeeklySchedule() {
                                 }}
                                 eventContent={renderEventContent}
                             />
+
+
                         </Card.Body>
                     </Card>
-
                     {/* Schedule State - Moved below the calendar */}
                     <Row className="mt-4">
                         <Col md={12}>
@@ -602,28 +405,30 @@ export default function WeeklySchedule() {
                 </Col>
             </Row>
 
+
+
             {/* Room Selection Modal */}
             <Modal show={showRoomModal} onHide={() => setShowRoomModal(false)}>
                 <Modal.Header style={{backgroundColor: '#f8f9fa'}}>
                     <Modal.Title style={{color: '#b25d31'}}>Selecionar Sala</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    {selectedBlock && (
+                    {selectedEvent && (
                         <>
-                            <p><strong>Cadeira:</strong> {subjects.find(s => s.Id === selectedBlock.extendedProps.subjectId)?.Name}</p>
-                            <p><strong>Horário:</strong> {new Date(selectedBlock.start).toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'})} - {new Date(selectedBlock.end).toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'})}</p>
-                            <p><strong>Dia:</strong> {new Date(selectedBlock.start).toLocaleDateString('pt-PT', {weekday: 'long', day: 'numeric', month: 'long'})}</p>
+                            <p><strong>Cadeira:</strong> {courses.find(c => c.id === selectedEvent.extendedProps.courseId).name}</p>
+                            <p><strong>Horário:</strong> {new Date(selectedEvent.start).toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'})} - {new Date(selectedEvent.end).toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'})}</p>
+                            <p><strong>Dia:</strong> {new Date(selectedEvent.start).toLocaleDateString('pt-PT', {weekday: 'long', day: 'numeric', month: 'long'})}</p>
 
                             <Form.Group className="mb-3">
                                 <Form.Label>Sala:</Form.Label>
                                 <Form.Select
-                                    value={selectedClassroom}
-                                    onChange={(e) => setSelectedClassroom(e.target.value)}
+                                    value={selectedRoom}
+                                    onChange={(e) => setSelectedRoom(e.target.value)}
                                     style={iptStyles.formControl}
                                 >
                                     <option value="">Selecione uma sala</option>
-                                    {classrooms.map(classroom => (
-                                        <option key={classroom.Id} value={classroom.Id}>{classroom.Name}</option>
+                                    {rooms.map(room => (
+                                        <option key={room.id} value={room.id}>{room.name}</option>
                                     ))}
                                 </Form.Select>
                             </Form.Group>
@@ -642,7 +447,64 @@ export default function WeeklySchedule() {
                     </Button>
                 </Modal.Footer>
             </Modal>
+
         </Container>
     );
+
 }
 
+/**
+ * Estes estilos devem ser buscados dos ficheiros scss ou fazer algo diferente
+ * Mas o ponto é não estarem aqui
+ */
+// Custom CSS for IPT styling
+const iptStyles = {
+
+    mainContainer: {
+        backgroundColor: '#ffffff',
+        padding: '20px',
+        maxWidth: '1200px',
+        margin: '0 auto',
+    },
+    headerText: {
+        color: '#b25d31',
+        marginBottom: '30px',
+        fontWeight: '500',
+    },
+    card: {
+        border: '1px solid #e0e0e0',
+        borderRadius: '4px',
+        boxShadow: 'none',
+    },
+    cardHeader: {
+        backgroundColor: '#f8f9fa',
+        color: '#b25d31',
+        fontWeight: '500',
+        border: 'none',
+    },
+    button: {
+        backgroundColor: '#b25d31',
+        borderColor: '#b25d31',
+        color: 'white',
+        fontWeight: '400',
+    },
+    formControl: {
+        border: '1px solid #ced4da',
+        borderRadius: '4px',
+        padding: '8px 12px',
+    },
+    logoContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        height: '100px', // Set your desired navbar height here
+    },
+    logo: {
+        maxHeight: '100%',
+        height: '100%',
+        width: 'auto',
+    },
+    instituteName: {
+        marginLeft: '15px',
+        color: '#333',
+    }
+};
