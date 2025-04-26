@@ -6,7 +6,7 @@ import {login} from '../src/api/authFetcher';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -15,8 +15,13 @@ const Login = () => {
     try {
       const data = await login(email, password);
       localStorage.setItem('token', data.token); // guarda o token
-      console.log(data);
-      navigate('/pages/calendar-test');
+      
+      if (data.user.roleId === 2) {
+        navigate('/pages/calendar-test');
+      } else {
+        navigate('/pages/blank');
+      }
+
     } catch (err) {
       console.log(err.message);
       setErrorMessage(err.message);

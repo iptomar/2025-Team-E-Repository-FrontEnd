@@ -2,6 +2,7 @@
 import App from "./App";
 import CalendarTest from "./pages/calendar-test";
 import Login from "./login";
+import Blank from "./pages/blank";
 
 const router = createBrowserRouter([
     {
@@ -11,6 +12,10 @@ const router = createBrowserRouter([
     {
         path: "/pages/calendar-test",
         element: <CalendarTest />,
+    },
+    {
+        path: "/pages/blank",
+        element: <Blank />,
     },
 ]);
 
