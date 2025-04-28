@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import './styles/main.scss';
+import '../../../styles/main.scss';
 import {useNavigate} from 'react-router-dom'
-import {login} from '../src/api/authFetcher';
+import {login} from '../../../api/authFetcher.js';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -15,8 +15,9 @@ const Login = () => {
     try {
       const data = await login(email, password);
       localStorage.setItem('token', data.token); // guarda o token
+      localStorage.setItem("user", JSON.stringify(data.user));
       console.log(data);
-      navigate('/pages/calendar-test');
+      navigate('/calendario');
     } catch (err) {
       console.log(err.message);
       setErrorMessage(err.message);
@@ -34,7 +35,7 @@ const Login = () => {
               className="login-image"
             />
           </div>
-          
+
           <div className="col-md-8 d-flex align-items-center justify-content-center bg-white">
             <div className="form-container">
               <h1 className="mb-5">Entrar na plataforma de horários</h1>

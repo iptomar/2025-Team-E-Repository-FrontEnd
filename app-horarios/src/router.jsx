@@ -1,16 +1,23 @@
 ﻿import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
-import CalendarTest from "./pages/calendar-test";
-import Login from "./login";
+import CalendarTest from "./pages/calendar/calendar-test.jsx";
+import Login from "./pages/auth/login/login.jsx";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
 
 const router = createBrowserRouter([
+    { path: "/", element: <Login /> },
     {
         path: "/",
-        element: <Login />,
-    },
-    {
-        path: "/pages/calendar-test",
-        element: <CalendarTest />,
+        element: <App />,
+        children: [
+            {
+                element: <ProtectedRoute />, // Protect all children below
+                children: [
+                    { path: "calendario", element: <CalendarTest /> },
+                    // ...other protected routes
+                ],
+            },
+        ],
     },
 ]);
 
