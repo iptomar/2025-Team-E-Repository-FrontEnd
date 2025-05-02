@@ -44,7 +44,9 @@ export default function WeeklySchedule() {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
+                
 
+                // RETIRAR quando tudo estiver prontinho
                 console.log('Cadeiras recebidas (funciona pfv):', response.data);
             
                 const colorPalette = ['#b25d31', '#5d9b42', '#4285f4', '#aa46bb', '#f4b400'];
@@ -52,6 +54,7 @@ export default function WeeklySchedule() {
                 const transformed = response.data.map((subject, index) => ({
                     id: subject.Id,
                     name: subject.Subject,  
+                    professor: subject.Professor,
                     requiredHours: Math.floor(subject.TotalHours / 15) || 3,
                     allocatedHours: 0,
                     color: colorPalette[index % colorPalette.length],
@@ -112,13 +115,14 @@ export default function WeeklySchedule() {
         const selectedCourse = courses.find(c => c.id === currentCourse);
         const newEvent = {
             id: Date.now(),
-            title: `${selectedCourse.name} (Sem sala)`,
+            title: `${selectedCourse.name} (Sem sala) - ${selectedCourse.professor}`,
             start: selectInfo.startStr,
             end: selectInfo.endStr,
             backgroundColor: selectedCourse.color,
             extendedProps: {
                 courseId: currentCourse,
                 room: '',
+                professor: selectedCourse.professor,
                 duration: durationHours
             }
         };
@@ -175,12 +179,12 @@ export default function WeeklySchedule() {
         // Update the event with the selected room
         const selectedCourse = courses.find(c => c.id === selectedEvent.extendedProps.courseId);
         const roomName = rooms.find(r => r.id === parseInt(selectedRoom)).name;
-
+        const professor = courses.find(c => c.id === selectedEvent.extendedProps.courseId).professor;
         setEvents(events.map(event => {
             if (parseInt(event.id) === parseInt(selectedEvent.id)) {
                 return {
                     ...event,
-                    title: `${selectedCourse.name} - ${roomName}`,
+                    title: `${selectedCourse.name} - ${roomName} - ${professor}`,
                     extendedProps: {
                         ...event.extendedProps,
                         room: selectedRoom
@@ -229,6 +233,7 @@ export default function WeeklySchedule() {
             events: events.map(event => ({
                 courseId: event.extendedProps.courseId,
                 roomId: event.extendedProps.room,
+                professor: courses?.professor || 'Desconhecido',
                 start: event.start,
                 end: event.end
             }))
@@ -406,7 +411,6 @@ export default function WeeklySchedule() {
             </Row>
 
 
-
             {/* Room Selection Modal */}
             <Modal show={showRoomModal} onHide={() => setShowRoomModal(false)}>
                 <Modal.Header style={{backgroundColor: '#f8f9fa'}}>
@@ -416,6 +420,7 @@ export default function WeeklySchedule() {
                     {selectedEvent && (
                         <>
                             <p><strong>Cadeira:</strong> {courses.find(c => c.id === selectedEvent.extendedProps.courseId).name}</p>
+                            <p><strong>Professor:</strong> {courses.find(c => c.id === selectedEvent.extendedProps.courseId).professor}</p>
                             <p><strong>Horário:</strong> {new Date(selectedEvent.start).toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'})} - {new Date(selectedEvent.end).toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'})}</p>
                             <p><strong>Dia:</strong> {new Date(selectedEvent.start).toLocaleDateString('pt-PT', {weekday: 'long', day: 'numeric', month: 'long'})}</p>
 
