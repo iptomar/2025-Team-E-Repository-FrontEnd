@@ -71,6 +71,7 @@ export default function WeeklySchedule() {
         fetchSubjects();
     }, []);
 
+
     useEffect(() => {
         const allAllocated = courses.every(course => 
             course.allocatedHours >= course.requiredHours
@@ -333,17 +334,16 @@ export default function WeeklySchedule() {
                                 initialView="timeGridWeek"
                                 headerToolbar={{
                                     left: "",
-                                    center: "title",
                                     right: ""
                                 }}
                                 titleFormat={{ weekday: 'long' }}
                                 dayHeaderFormat={{ weekday: 'short' }}
-                                hiddenDays={[0]}
                                 slotDuration="00:30:00"
                                 slotMinTime="08:30:00"
                                 slotMaxTime="23:30:00"
                                 allDaySlot={false}
-                                weekends={false}
+                                weekends={true}
+                                hiddenDays={[0]} // Esconde o domingo
                                 selectable={true}
                                 selectMirror={true}
                                 dayMaxEvents={true}
@@ -460,6 +460,7 @@ export default function WeeklySchedule() {
 // Custom CSS for IPT styling
 const iptStyles = {
 
+
     mainContainer: {
         backgroundColor: '#ffffff',
         padding: '20px',
@@ -471,6 +472,7 @@ const iptStyles = {
         marginBottom: '30px',
         fontWeight: '500',
     },
+    
     card: {
         border: '1px solid #e0e0e0',
         borderRadius: '4px',
