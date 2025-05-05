@@ -1,0 +1,4 @@
+/*Esta linha remove a cor aplicada ao dia atual no calendário*/
+.fc-day-today {
+    background-color: transparent !important;
+}
