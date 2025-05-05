@@ -6,7 +6,8 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Modal from 'react-bootstrap/Modal';
-import './Calendar.scss'; // Import the external SCSS file
+import './Calendar.scss';
+import {fetchCoursesWithProfessors} from "../../api/courseFetcher.js";
 
 /**
  * WeeklySchedule Component
@@ -16,13 +17,10 @@ import './Calendar.scss'; // Import the external SCSS file
  */
 export default function WeeklySchedule() {
     // State for courses and their required hours
-    const [courses, setCourses] = useState([
-        { id: 1, name: 'An. Matemática II', requiredHours: 3, allocatedHours: 0, color: '#b25d31' },
-        { id: 2, name: 'Prog. Orient. Obj.', requiredHours: 3, allocatedHours: 0, color: '#5d9b42' },
-        { id: 3, name: 'Lab. Microstat.', requiredHours: 3, allocatedHours: 0, color: '#4285f4' },
-        { id: 4, name: 'Mat. Computac.', requiredHours: 3, allocatedHours: 0, color: '#aa46bb' },
-        { id: 5, name: 'Int. à Prog. Web', requiredHours: 3, allocatedHours: 0, color: '#f4b400' },
-    ]);
+    const [courses, setCourses] = useState([]);
+    const [loadingCourses, setLoadingCourses] = useState(true);
+    const [coursesError, setCoursesError] = useState(null);
+
 
     const [rooms] = useState([
         { id: 1, name: 'B257' },
@@ -50,6 +48,32 @@ export default function WeeklySchedule() {
 
     // Calendar reference
     const calendarRef = useRef(null);
+
+    useEffect(() => {
+        const loadCourses = async () => {
+            setLoadingCourses(true);
+            setCoursesError(null);
+            try {
+                const data = await fetchCoursesWithProfessors();
+                const colorPalette = ['#b25d31', '#5d9b42', '#4285f4', '#aa46bb', '#f4b400'];
+                const transformed = data.map((subject, index) => ({
+                    id: subject.Id,
+                    name: subject.Subject,
+                    professor: subject.Professor,
+                    requiredHours: Math.floor(subject.TotalHours / 15) || 3,
+                    allocatedHours: 0,
+                    color: colorPalette[index % colorPalette.length],
+                }));
+                setCourses(transformed);
+            } catch (err) {
+                setCoursesError(err.message || "Erro ao retornar cadeiras");
+            } finally {
+                setLoadingCourses(false);
+            }
+        };
+        loadCourses();
+    }, []);
+
 
     // Check if all courses have their hours allocated and all events have rooms
     useEffect(() => {
@@ -90,20 +114,21 @@ export default function WeeklySchedule() {
             return;
         }
 
-        // Add event without room initially
         const selectedCourse = courses.find(c => c.id === currentCourse);
         const newEvent = {
             id: Date.now(),
-            title: `${selectedCourse.name} (Sem sala)`,
+            title: `${selectedCourse.name} (Sem sala) - ${selectedCourse.professor}`,
             start: selectInfo.startStr,
             end: selectInfo.endStr,
             backgroundColor: selectedCourse.color,
             extendedProps: {
                 courseId: currentCourse,
                 room: '',
+                professor: selectedCourse.professor,
                 duration: durationHours
             }
         };
+
 
         setEvents([...events, newEvent]);
 
@@ -154,15 +179,14 @@ export default function WeeklySchedule() {
             return;
         }
 
-        // Update the event with the selected room
         const selectedCourse = courses.find(c => c.id === selectedEvent.extendedProps.courseId);
         const roomName = rooms.find(r => r.id === parseInt(selectedRoom)).name;
-
+        const professor = selectedCourse.professor;
         setEvents(events.map(event => {
             if (parseInt(event.id) === parseInt(selectedEvent.id)) {
                 return {
                     ...event,
-                    title: `${selectedCourse.name} - ${roomName}`,
+                    title: `${selectedCourse.name} - ${roomName} - ${professor}`,
                     extendedProps: {
                         ...event.extendedProps,
                         room: selectedRoom
@@ -171,6 +195,7 @@ export default function WeeklySchedule() {
             }
             return event;
         }));
+
 
         setShowRoomModal(false);
         setMessage({ text: `Sala atribuída com sucesso!`, type: 'success' });
@@ -211,10 +236,12 @@ export default function WeeklySchedule() {
             events: events.map(event => ({
                 courseId: event.extendedProps.courseId,
                 roomId: event.extendedProps.room,
+                professor: event.extendedProps.professor || 'Desconhecido',
                 start: event.start,
                 end: event.end
             }))
         };
+
 
         console.log('Schedule data to be saved:', scheduleData);
     };
@@ -245,7 +272,9 @@ export default function WeeklySchedule() {
                         <Card.Header className="cardHeader">Cadeiras</Card.Header>
                         <Card.Body>
                             <Form>
-                                {courses.map(course => (
+                                {loadingCourses && <Alert variant="info">Carregando cadeiras...</Alert>}
+                                {coursesError && <Alert variant="danger">{coursesError}</Alert>}
+                                {!loadingCourses && !coursesError && courses.map(course => (
                                     <div key={course.id} className="mb-3">
                                         <Form.Check
                                             type="radio"
@@ -253,14 +282,14 @@ export default function WeeklySchedule() {
                                             name="course"
                                             label={
                                                 <span>
-                                                {course.name}
-                                                    <Badge
-                                                        bg={course.allocatedHours >= course.requiredHours ? "success" : "warning"}
-                                                        className="ms-2"
-                                                    >
-                                                    {course.allocatedHours}/{course.requiredHours}h
-                                                </Badge>
-                                            </span>
+                        {course.name} <span style={{color: "#888"}}>({course.professor})</span>
+                        <Badge
+                            bg={course.allocatedHours >= course.requiredHours ? "success" : "warning"}
+                            className="ms-2"
+                        >
+                            {course.allocatedHours}/{course.requiredHours}h
+                        </Badge>
+                    </span>
                                             }
                                             onChange={() => setCurrentCourse(course.id)}
                                             checked={currentCourse === course.id}
@@ -268,6 +297,7 @@ export default function WeeklySchedule() {
                                     </div>
                                 ))}
                             </Form>
+
                         </Card.Body>
                     </Card>
 
@@ -292,19 +322,15 @@ export default function WeeklySchedule() {
                                 ref={calendarRef}
                                 plugins={[timeGridPlugin, interactionPlugin]}
                                 initialView="timeGridWeek"
-                                headerToolbar={{
-                                    left: "",
-                                    center: "title",
-                                    right: ""
-                                }}
+                                headerToolbar= {false}
                                 titleFormat={{ weekday: 'long' }}
                                 dayHeaderFormat={{ weekday: 'short' }}
-                                hiddenDays={[0]}
                                 slotDuration="00:30:00"
                                 slotMinTime="08:30:00"
                                 slotMaxTime="23:30:00"
                                 allDaySlot={false}
-                                weekends={false}
+                                weekends={true}
+                                hiddenDays={[0]} // Esconde o domingo
                                 selectable={true}
                                 selectMirror={true}
                                 dayMaxEvents={true}
@@ -372,6 +398,7 @@ export default function WeeklySchedule() {
                     {selectedEvent && (
                         <>
                             <p><strong>Cadeira:</strong> {courses.find(c => c.id === selectedEvent.extendedProps.courseId).name}</p>
+                            <p><strong>Professor:</strong> {courses.find(c => c.id === selectedEvent.extendedProps.courseId).professor}</p>
                             <p><strong>Horário:</strong> {new Date(selectedEvent.start).toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'})} - {new Date(selectedEvent.end).toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'})}</p>
                             <p><strong>Dia:</strong> {new Date(selectedEvent.start).toLocaleDateString('pt-PT', {weekday: 'long', day: 'numeric', month: 'long'})}</p>
 
