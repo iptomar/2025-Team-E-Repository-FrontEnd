@@ -60,7 +60,6 @@ export default function WeeklySchedule() {
                     id: subject.Id,
                     name: subject.Subject,
                     professor: subject.Professor,
-                    requiredHours: Math.floor(subject.TotalHours / 15) || 3,
                     allocatedHours: 0,
                     color: colorPalette[index % colorPalette.length],
                 }));
@@ -77,15 +76,11 @@ export default function WeeklySchedule() {
 
     // Check if all courses have their hours allocated and all events have rooms
     useEffect(() => {
-        const allAllocated = courses.every(course =>
-            course.allocatedHours >= course.requiredHours
-        );
-
         const allEventsHaveRooms = events.every(event =>
             event.extendedProps.room && event.extendedProps.room !== ''
         );
 
-        setScheduleComplete(allAllocated && allEventsHaveRooms);
+        setScheduleComplete(allEventsHaveRooms);
     }, [courses, events]);
 
     // Handle date selection in calendar
