@@ -27,7 +27,7 @@ packages/react-devtools-shell/dist
 packages/react-devtools-timeline/dist
 
 # Environment variables
-.env
+app-horarios/.env
 .env.local
 
 # Editor directories and files
