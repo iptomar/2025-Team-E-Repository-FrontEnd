@@ -1,17 +1,15 @@
 ﻿import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import iptLogo from "../../assets/ipt-logo-full.png";
 import "./Navbar.scss";
-import {useAuth} from "../../contexts/AuthContext.jsx";
+import { useAuth } from "../../contexts/AuthContext.jsx";
 
 const Navbar = () => {
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
-    //IF there is no authenticated user then don't render the Navbar
+    const location = useLocation();
 
-
-    const user = JSON.parse(localStorage.getItem("user"))|| [];
-    console.log(user.email)
+    const user = JSON.parse(localStorage.getItem("user")) || [];
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -19,16 +17,26 @@ const Navbar = () => {
         navigate("/"); // Redirect to login
     };
 
-    if (isAuthenticated){
+    const getPageTitle = () => {
+        if (location.pathname.includes("/calendario")) {
+            return "Calendário";
+        } else if (location.pathname.includes("/home")) {
+            return "Meus horários";
+        } else {
+            return "Gestão de Horários";
+        }
+    };
+
+    if (isAuthenticated) {
         return (
             <nav className="navbar">
                 <div className="navbar-left">
-                    <img src={iptLogo} alt="IPT Logo" className="navbar-logo"/>
-                    <span className="navbar-title">Gestão de Horários</span>
+                    <img src={iptLogo} alt="IPT Logo" className="navbar-logo" />
+                    <span className="navbar-title">{getPageTitle()}</span>
                 </div>
                 <div className="navbar-center">
                     <ul className="navbar-links">
-                        <li><a href="/calendario">Calendário</a></li>
+                        <li><a href="/home">Meus horários</a></li>
                     </ul>
                 </div>
                 <div className="navbar-right">
@@ -40,8 +48,10 @@ const Navbar = () => {
                     )}
                 </div>
             </nav>
-        )
+        );
     }
+
+    return null;
 };
 
 export default Navbar;
