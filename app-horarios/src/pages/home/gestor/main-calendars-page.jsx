@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Container, ListGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import CreateCalendarModal from '../../../components/Calendar/CreateCalendarModal'; 
 
 export default function CalendarsPage() {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState('');
   const [calendars, setCalendars] = useState([]);
+
+  const [showModal, setShowModal] = useState(false); 
 
   useEffect(() => {
     // Comentado: ligação futura ao endpoint real
@@ -19,15 +22,29 @@ export default function CalendarsPage() {
     setCalendars([]); 
   }, []);
 
-  const goToCreateSchedule = () => {
-    navigate('/calendario'); 
+  const handleOpenModal = () => {
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  const handleCreateCalendar = ({ calendarName, startDate, endDate }) => {
+    navigate('/calendario', {
+      state: {
+        calendarName,
+        startDate,
+        endDate
+      }
+    });
   };
 
   return (
     <Container className="mt-4">
       <Card className="mt-4 mb-4">
         <Card.Body>
-          <Button variant="primary" onClick={goToCreateSchedule}>
+          <Button variant="primary" onClick={handleOpenModal}>
             Criar novo horário
           </Button>
         </Card.Body>
@@ -47,6 +64,13 @@ export default function CalendarsPage() {
           )}
         </ListGroup>
       </Card>
+
+      {/* Modal */}
+      <CreateCalendarModal
+        show={showModal}
+        handleClose={handleCloseModal}
+        onSubmit={handleCreateCalendar}
+      />
     </Container>
   );
 }

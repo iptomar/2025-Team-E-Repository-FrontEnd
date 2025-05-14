@@ -8,6 +8,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Modal from 'react-bootstrap/Modal';
 import './Calendar.scss';
 import {fetchCoursesWithProfessors} from "../../api/courseFetcher.js";
+import { useLocation } from 'react-router-dom';
+
 
 /**
  * WeeklySchedule Component
@@ -20,6 +22,9 @@ export default function WeeklySchedule() {
     const [courses, setCourses] = useState([]);
     const [loadingCourses, setLoadingCourses] = useState(true);
     const [coursesError, setCoursesError] = useState(null);
+
+    const location = useLocation();
+    const { calendarName, startDate, endDate } = location.state || {};
 
 
     const [rooms] = useState([
@@ -313,6 +318,15 @@ export default function WeeklySchedule() {
                 <Col md={9}>
                     <Card className="card">
                         <Card.Body>
+                            {calendarName && (
+                                <Card className="mb-4 p-3">
+                                    <h5 className="mb-1"><strong>Calendário:</strong> {calendarName}</h5>
+                                    <p className="mb-0">
+                                        <strong>Período:</strong> {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
+                                    </p>
+                                </Card>
+                            )}
+
                             <FullCalendar
                                 ref={calendarRef}
                                 plugins={[timeGridPlugin, interactionPlugin]}
