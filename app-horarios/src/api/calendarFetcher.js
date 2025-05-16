@@ -17,8 +17,8 @@ export const fetchEvents = async (token) => {
 };
 
 // Create a new event
-export const createEvent = async (token, event) => {
-    const response = await fetch(`${API_BASE}/api/calendar/events`, {
+export const createEvent = async (scheduleId, token, event) => {
+    const response = await fetch(`${API_BASE}/api/schedules/${scheduleId}/blocks`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -28,10 +28,12 @@ export const createEvent = async (token, event) => {
     });
     const data = await response.json();
     if (!response.ok) {
-        throw new Error(data.message || 'Erro ao criar evento');
+        console.error('Erro do servidor:', data);
+        throw new Error(data.error || data.message || 'Erro ao criar evento');
     }
     return data;
 };
+
 
 // Update an existing event
 export const updateEvent = async (token, eventId, updatedEvent) => {

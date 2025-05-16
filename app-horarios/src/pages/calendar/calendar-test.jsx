@@ -1,4 +1,4 @@
-﻿import '@fullcalendar/core'; // Add this line first
+﻿// Adicionar bloco ao calendárioimport '@fullcalendar/core'; // Add this line first
 import React, {useState, useEffect, useRef} from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Badge } from 'react-bootstrap';
 import FullCalendar from '@fullcalendar/react';
@@ -8,8 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Modal from 'react-bootstrap/Modal';
 import './Calendar.scss';
 import {fetchCoursesWithProfessors} from "../../api/courseFetcher.js";
-import { useLocation } from 'react-router-dom';
-
+import {createEvent} from "../../api/calendarFetcher.js"
 
 /**
  * WeeklySchedule Component
@@ -22,10 +21,6 @@ export default function WeeklySchedule() {
     const [courses, setCourses] = useState([]);
     const [loadingCourses, setLoadingCourses] = useState(true);
     const [coursesError, setCoursesError] = useState(null);
-
-    const location = useLocation();
-    const { calendarName, startDate, endDate } = location.state || {};
-
 
     const [rooms] = useState([
         { id: 1, name: 'B257' },
@@ -123,12 +118,12 @@ export default function WeeklySchedule() {
             backgroundColor: selectedCourse.color,
             extendedProps: {
                 courseId: currentCourse,
+                subjectId: selectedCourse.id,
                 room: '',
                 professor: selectedCourse.professor,
                 duration: durationHours
             }
         };
-
 
         setEvents([...events, newEvent]);
 
@@ -218,8 +213,8 @@ export default function WeeklySchedule() {
         setMessage({ text: 'Aula removida com sucesso!', type: 'info' });
     };
 
-    const saveSchedule = () => {
-        // Check if all events have rooms assigned
+     
+    const saveSchedule = async () => {
         const eventsWithoutRooms = events.filter(event => !event.extendedProps.room);
 
         if (eventsWithoutRooms.length > 0) {
@@ -230,21 +225,38 @@ export default function WeeklySchedule() {
             return;
         }
 
-        alert('Horário guardado com sucesso!');
+        //para receber o token 
+        const token = localStorage.getItem('token');
+        console.log(token);
+        const scheduleId = 1;
+        //envia toda a informação de quem está a criar este horario 
+        //const user = localStorage.getItem('user');
+        
+        // Junta todos as aulas do horário
+        const scheduleList = events.map(event => ({
+            subjectId: event.extendedProps.courseId,
+            //roomId: event.extendedProps.room,
+            //professor: event.extendedProps.professor || 'Desconhecido',
+            startHour: new Date(event.start).toTimeString().slice(0, 8),
+            endHour: new Date(event.end).toTimeString().slice(0, 8),
+            //createdBy: user
+        }));
+        
 
-        const scheduleData = {
-            events: events.map(event => ({
-                courseId: event.extendedProps.courseId,
-                roomId: event.extendedProps.room,
-                professor: event.extendedProps.professor || 'Desconhecido',
-                start: event.start,
-                end: event.end
-            }))
-        };
+        console.log('Horário guardado:', scheduleList); 
 
+        try {
+            for (const scheduleData of scheduleList) {
+                await createEvent(scheduleId, token, scheduleData);
+            }
 
-        console.log('Schedule data to be saved:', scheduleData);
+            setMessage({ text: 'Horário guardado com sucesso!', type: 'success' });
+            alert('Horário guardado com sucesso!');
+        } catch (error) {
+            setMessage({ text: error.message, type: 'error' });
+        }
     };
+
 
     function renderEventContent(eventInfo) {
         return (
@@ -318,15 +330,6 @@ export default function WeeklySchedule() {
                 <Col md={9}>
                     <Card className="card">
                         <Card.Body>
-                            {calendarName && (
-                                <Card className="mb-4 p-3">
-                                    <h5 className="mb-1"><strong>Calendário:</strong> {calendarName}</h5>
-                                    <p className="mb-0">
-                                        <strong>Período:</strong> {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
-                                    </p>
-                                </Card>
-                            )}
-
                             <FullCalendar
                                 ref={calendarRef}
                                 plugins={[timeGridPlugin, interactionPlugin]}
@@ -442,3 +445,6 @@ export default function WeeklySchedule() {
         </Container>
     );
 }
+
+
+
