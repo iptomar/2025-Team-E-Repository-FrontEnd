@@ -1,14 +1,32 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
+import {fetchCoursesWithProfessors} from "../../api/courseFetcher.js";
 
 const CreateCalendarModal = ({ show, handleClose, onSubmit }) => {
   const [calendarName, setCalendarName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  
+  //Vai buscar a informação do curso(s) do professor
+  const loadCourses = async () => {
+    try {
+      const data = await fetchCoursesWithProfessors(); // recebe os cursos do backend
+      setCourses(data); // guarda na state
+      } catch (err) {
+        console.error("Erro ao carregar cursos:", err);
+      }
+    };
+  
+    useEffect(() => {
+      loadCourses();  
+    }, []);
 
   const handleFormSubmit = () => {
-    onSubmit({ calendarName, startDate, endDate });
+    onSubmit({ courseName: selectedCourse, calendarName, startDate, endDate });
     handleClose(); 
+    setSelectedCourse('');
     setCalendarName('');
     setStartDate('');
     setEndDate('');
@@ -30,6 +48,23 @@ const CreateCalendarModal = ({ show, handleClose, onSubmit }) => {
               placeholder="Introduz o nome"
             />
           </Form.Group>
+
+          <Form.Group controlId="courseSelect">
+            <Form.Label>Curso</Form.Label>
+            <Form.Control
+              as="select"
+              value={selectedCourse}
+              onChange={(e) => setSelectedCourse(e.target.value)}
+            >
+              <option value="">Selecione um curso</option>
+              {courses.map((course) => (
+                <option key={course.Name} value={course.Name}>
+                  {course.Name}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+
           <Form.Group className="mb-3">
             <Form.Label>Data de início</Form.Label>
             <Form.Control

@@ -1,5 +1,5 @@
 ﻿// Adicionar bloco ao calendárioimport '@fullcalendar/core'; // Add this line first
-import React, {useState, useEffect, useRef} from 'react';
+import {useState, useEffect, useRef} from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Badge } from 'react-bootstrap';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -7,8 +7,9 @@ import interactionPlugin from '@fullcalendar/interaction';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Modal from 'react-bootstrap/Modal';
 import './Calendar.scss';
-import {fetchCoursesWithProfessors} from "../../api/courseFetcher.js";
+import {fetchSubjectsWithProfessors} from "../../api/courseFetcher.js";
 import {createEvent} from "../../api/calendarFetcher.js"
+import { useNavigate } from 'react-router-dom';
 
 /**
  * WeeklySchedule Component
@@ -17,6 +18,8 @@ import {createEvent} from "../../api/calendarFetcher.js"
  * the IPT (Instituto Politécnico de Tomar) design style.
  */
 export default function WeeklySchedule() {
+    const navigate = useNavigate();
+
     // State for courses and their required hours
     const [courses, setCourses] = useState([]);
     const [loadingCourses, setLoadingCourses] = useState(true);
@@ -54,7 +57,7 @@ export default function WeeklySchedule() {
             setLoadingCourses(true);
             setCoursesError(null);
             try {
-                const data = await fetchCoursesWithProfessors();
+                const data = await fetchSubjectsWithProfessors();
                 const colorPalette = ['#b25d31', '#5d9b42', '#4285f4', '#aa46bb', '#f4b400'];
                 const transformed = data.map((subject, index) => ({
                     id: subject.Id,
@@ -227,7 +230,7 @@ export default function WeeklySchedule() {
 
         //para receber o token 
         const token = localStorage.getItem('token');
-        console.log(token);
+        //todo: ir buscar o scheduleId ao backend
         const scheduleId = 1;
         //envia toda a informação de quem está a criar este horario 
         //const user = localStorage.getItem('user');
@@ -242,12 +245,12 @@ export default function WeeklySchedule() {
             //createdBy: user
         }));
         
-
         console.log('Horário guardado:', scheduleList); 
 
         try {
             for (const scheduleData of scheduleList) {
                 await createEvent(scheduleId, token, scheduleData);
+                navigate('/home');
             }
 
             setMessage({ text: 'Horário guardado com sucesso!', type: 'success' });

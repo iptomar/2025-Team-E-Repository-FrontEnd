@@ -1,24 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Card, Container, ListGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import CreateCalendarModal from '../../../components/Calendar/CreateCalendarModal'; 
 
 export default function CalendarsPage() {
   const navigate = useNavigate();
-  const [userEmail, setUserEmail] = useState('');
+  //todo: implementar juntamente com endpoint todo1
+  //const [userEmail, setUserEmail] = useState('');
   const [calendars, setCalendars] = useState([]);
 
   const [showModal, setShowModal] = useState(false); 
-
+  
   useEffect(() => {
-    // Comentado: ligação futura ao endpoint real
+    // todo1: ligação futura ao endpoint real
     /*
     fetch('/api/user-calendars') // endpoint real aqui
       .then(response => response.json())
       .then(data => setCalendars(data))
       .catch(error => console.error('Erro ao buscar calendários:', error));
     */
-
+    
     setCalendars([]); 
   }, []);
 
@@ -30,9 +31,13 @@ export default function CalendarsPage() {
     setShowModal(false);
   };
 
-  const handleCreateCalendar = ({ calendarName, startDate, endDate }) => {
+
+ 
+  const handleCreateCalendar = ({courseName, calendarName, startDate, endDate }) => {
+
     navigate('/calendario', {
       state: {
+        courseName,
         calendarName,
         startDate,
         endDate
