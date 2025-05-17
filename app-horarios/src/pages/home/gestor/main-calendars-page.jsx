@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container, ListGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import CreateCalendarModal from '../../../components/Calendar/CreateCalendarModal'; 
+import { createSchedule } from '../../../api/calendarFetcher';
 
 export default function CalendarsPage() {
   const navigate = useNavigate();
@@ -31,18 +32,31 @@ export default function CalendarsPage() {
     setShowModal(false);
   };
 
+  
 
- 
-  const handleCreateCalendar = ({courseName, calendarName, startDate, endDate }) => {
+  const handleCreateCalendar = async ({ courseId, calendarName, startDate, endDate }) => {
+    try {
+      const data = await createSchedule({ 
+        courseId, 
+        name: calendarName, 
+        startDate, 
+        endDate 
+      });
 
-    navigate('/calendario', {
-      state: {
-        courseName,
-        calendarName,
-        startDate,
-        endDate
-      }
-    });
+
+      navigate('/calendario', {
+        state: {
+          courseId,
+          calendarName,
+          startDate,
+          endDate,
+          scheduleId: data.scheduleId
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      alert('Falha ao criar o calendário. Tente novamente.');
+    }
   };
 
   return (

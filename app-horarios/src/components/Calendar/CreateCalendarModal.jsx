@@ -24,7 +24,11 @@ const CreateCalendarModal = ({ show, handleClose, onSubmit }) => {
     }, []);
 
   const handleFormSubmit = () => {
-    onSubmit({ courseName: selectedCourse, calendarName, startDate, endDate });
+    onSubmit({ 
+      courseId: selectedCourse,
+      calendarName, 
+      startDate, 
+      endDate });
     handleClose(); 
     setSelectedCourse('');
     setCalendarName('');
@@ -58,8 +62,8 @@ const CreateCalendarModal = ({ show, handleClose, onSubmit }) => {
             >
               <option value="">Selecione um curso</option>
               {courses.map((course) => (
-                <option key={course.Name} value={course.Name}>
-                  {course.Name}
+                 <option key={course.CourseFK} value={course.CourseFK}>
+                   {course.Name}
                 </option>
               ))}
             </Form.Control>

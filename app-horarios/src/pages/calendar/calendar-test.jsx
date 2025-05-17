@@ -9,7 +9,7 @@ import Modal from 'react-bootstrap/Modal';
 import './Calendar.scss';
 import {fetchSubjectsWithProfessors} from "../../api/courseFetcher.js";
 import {createEvent} from "../../api/calendarFetcher.js"
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 /**
  * WeeklySchedule Component
@@ -51,6 +51,11 @@ export default function WeeklySchedule() {
 
     // Calendar reference
     const calendarRef = useRef(null);
+
+    const location = useLocation();
+    
+    const { scheduleId } = location.state
+    
 
     useEffect(() => {
         const loadCourses = async () => {
@@ -229,9 +234,7 @@ export default function WeeklySchedule() {
         }
 
         //para receber o token 
-        const token = localStorage.getItem('token');
-        //todo: ir buscar o scheduleId ao backend
-        const scheduleId = 1;
+        const token = localStorage.getItem('token');    
         //envia toda a informação de quem está a criar este horario 
         //const user = localStorage.getItem('user');
         
