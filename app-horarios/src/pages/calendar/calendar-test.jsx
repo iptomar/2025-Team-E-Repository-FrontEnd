@@ -1,5 +1,5 @@
-﻿import '@fullcalendar/core'; // Add this line first
-import React, {useState, useEffect, useRef} from 'react';
+﻿// Adicionar bloco ao calendárioimport '@fullcalendar/core'; // Add this line first
+import {useState, useEffect, useRef} from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Badge } from 'react-bootstrap';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -7,7 +7,9 @@ import interactionPlugin from '@fullcalendar/interaction';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Modal from 'react-bootstrap/Modal';
 import './Calendar.scss';
-import {fetchCoursesWithProfessors} from "../../api/courseFetcher.js";
+import {fetchSubjectsWithProfessors} from "../../api/courseFetcher.js";
+import {createEvent} from "../../api/calendarFetcher.js"
+import { useNavigate, useLocation } from 'react-router-dom';
 
 /**
  * WeeklySchedule Component
@@ -16,11 +18,12 @@ import {fetchCoursesWithProfessors} from "../../api/courseFetcher.js";
  * the IPT (Instituto Politécnico de Tomar) design style.
  */
 export default function WeeklySchedule() {
+    const navigate = useNavigate();
+
     // State for courses and their required hours
     const [courses, setCourses] = useState([]);
     const [loadingCourses, setLoadingCourses] = useState(true);
     const [coursesError, setCoursesError] = useState(null);
-
 
     const [rooms] = useState([
         { id: 1, name: 'B257' },
@@ -49,12 +52,17 @@ export default function WeeklySchedule() {
     // Calendar reference
     const calendarRef = useRef(null);
 
+    const location = useLocation();
+    
+    const { scheduleId } = location.state
+    
+
     useEffect(() => {
         const loadCourses = async () => {
             setLoadingCourses(true);
             setCoursesError(null);
             try {
-                const data = await fetchCoursesWithProfessors();
+                const data = await fetchSubjectsWithProfessors();
                 const colorPalette = ['#b25d31', '#5d9b42', '#4285f4', '#aa46bb', '#f4b400'];
                 const transformed = data.map((subject, index) => ({
                     id: subject.Id,
@@ -118,12 +126,12 @@ export default function WeeklySchedule() {
             backgroundColor: selectedCourse.color,
             extendedProps: {
                 courseId: currentCourse,
+                subjectId: selectedCourse.id,
                 room: '',
                 professor: selectedCourse.professor,
                 duration: durationHours
             }
         };
-
 
         setEvents([...events, newEvent]);
 
@@ -213,8 +221,8 @@ export default function WeeklySchedule() {
         setMessage({ text: 'Aula removida com sucesso!', type: 'info' });
     };
 
-    const saveSchedule = () => {
-        // Check if all events have rooms assigned
+     
+    const saveSchedule = async () => {
         const eventsWithoutRooms = events.filter(event => !event.extendedProps.room);
 
         if (eventsWithoutRooms.length > 0) {
@@ -225,21 +233,37 @@ export default function WeeklySchedule() {
             return;
         }
 
-        alert('Horário guardado com sucesso!');
+        //para receber o token 
+        const token = localStorage.getItem('token');    
+        //envia toda a informação de quem está a criar este horario 
+        //const user = localStorage.getItem('user');
+        
+        // Junta todos as aulas do horário
+        const scheduleList = events.map(event => ({
+            subjectId: event.extendedProps.courseId,
+            scheduleId: scheduleId,
+            //roomId: event.extendedProps.room,
+            //professor: event.extendedProps.professor || 'Desconhecido',
+            startHour: new Date(event.start).toTimeString().slice(0, 8),
+            endHour: new Date(event.end).toTimeString().slice(0, 8),
+            //createdBy: user
+        }));
+        
+        console.log('Horário guardado:', scheduleList); 
 
-        const scheduleData = {
-            events: events.map(event => ({
-                courseId: event.extendedProps.courseId,
-                roomId: event.extendedProps.room,
-                professor: event.extendedProps.professor || 'Desconhecido',
-                start: event.start,
-                end: event.end
-            }))
-        };
+        try {
+            for (const scheduleData of scheduleList) {
+                await createEvent(scheduleId, token, scheduleData);
+                navigate('/home');
+            }
 
-
-        console.log('Schedule data to be saved:', scheduleData);
+            setMessage({ text: 'Horário guardado com sucesso!', type: 'success' });
+            alert('Horário guardado com sucesso!');
+        } catch (error) {
+            setMessage({ text: error.message, type: 'error' });
+        }
     };
+
 
     function renderEventContent(eventInfo) {
         return (
@@ -428,3 +452,6 @@ export default function WeeklySchedule() {
         </Container>
     );
 }
+
+
+
