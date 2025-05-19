@@ -241,6 +241,7 @@ export default function WeeklySchedule() {
         // Junta todos as aulas do horário
         const scheduleList = events.map(event => ({
             subjectId: event.extendedProps.courseId,
+            scheduleId: scheduleId,
             //roomId: event.extendedProps.room,
             //professor: event.extendedProps.professor || 'Desconhecido',
             startHour: new Date(event.start).toTimeString().slice(0, 8),
