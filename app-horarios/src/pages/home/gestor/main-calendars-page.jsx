@@ -1,38 +1,36 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, Container, ListGroup } from 'react-bootstrap';
+import { Button, Card, Container, ListGroup, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import CreateCalendarModal from '../../../components/Calendar/CreateCalendarModal'; 
-import { createSchedule } from '../../../api/calendarFetcher';
+import { createSchedule, fetchUserSchedules } from '../../../api/calendarFetcher';
 
 export default function CalendarsPage() {
   const navigate = useNavigate();
-  //todo: implementar juntamente com endpoint todo1
-  //const [userEmail, setUserEmail] = useState('');
   const [calendars, setCalendars] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  const [showModal, setShowModal] = useState(false); 
-  
+  // Add missing modal handlers
+  const handleOpenModal = () => setShowModal(true);
+  const handleCloseModal = () => setShowModal(false);
+
   useEffect(() => {
-    // todo1: ligação futura ao endpoint real
-    /*
-    fetch('/api/user-calendars') // endpoint real aqui
-      .then(response => response.json())
-      .then(data => setCalendars(data))
-      .catch(error => console.error('Erro ao buscar calendários:', error));
-    */
+    const loadCalendars = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const data = await fetchUserSchedules(token);
+        setCalendars(data);
+        setError(null);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    setCalendars([]); 
+    loadCalendars();
   }, []);
-
-  const handleOpenModal = () => {
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
-
-  
 
   const handleCreateCalendar = async ({ courseId, calendarName, startDate, endDate }) => {
     try {
@@ -43,15 +41,13 @@ export default function CalendarsPage() {
         endDate 
       });
 
+      // Refresh calendar list after creation
+      const token = localStorage.getItem('token');
+      const updatedCalendars = await fetchUserSchedules(token);
+      setCalendars(updatedCalendars);
 
       navigate('/calendario', {
-        state: {
-          courseId,
-          calendarName,
-          startDate,
-          endDate,
-          scheduleId: data.scheduleId
-        }
+        state: { scheduleId: data.scheduleId }
       });
     } catch (error) {
       console.error(error);
@@ -72,19 +68,40 @@ export default function CalendarsPage() {
       <Card>
         <Card.Header>Meus Horários</Card.Header>
         <ListGroup variant="flush">
-          {calendars.length === 0 ? (
+          {loading ? (
+            <ListGroup.Item className="text-center">
+              <Spinner animation="border" />
+            </ListGroup.Item>
+          ) : error ? (
+            <ListGroup.Item className="text-danger">
+              Erro ao carregar horários: {error}
+            </ListGroup.Item>
+          ) : calendars.length === 0 ? (
             <ListGroup.Item>Nenhum horário encontrado.</ListGroup.Item>
           ) : (
             calendars.map(cal => (
-              <ListGroup.Item key={cal.id}>
-                <strong>{cal.name}</strong> <span style={{ color: '#888' }}>({cal.createdAt})</span>
+              <ListGroup.Item 
+                key={cal.Id}
+                action 
+                className="d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  <strong>{cal.Name}</strong>
+                  {cal.CourseName && (
+                    <span className="ms-2 text-muted">({cal.CourseName})</span>
+                  )}
+                </div>
+                <div>
+                  <small className="text-muted">
+                    Criado em: {new Date(cal.CreatedOn).toLocaleDateString('pt-PT')}
+                  </small>
+                </div>
               </ListGroup.Item>
             ))
           )}
         </ListGroup>
       </Card>
 
-      {/* Modal */}
       <CreateCalendarModal
         show={showModal}
         handleClose={handleCloseModal}

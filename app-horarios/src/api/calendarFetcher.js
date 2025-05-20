@@ -93,3 +93,19 @@ export const createSchedule = async ({ courseId, name, startDate, endDate }) => 
 
   return response.json();
 };
+
+
+export const fetchUserSchedules = async (token) => {
+  const response = await fetch(`${API_BASE}/api/schedules/user/me`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Erro ao buscar calendários');
+  }
+  return data;
+};
