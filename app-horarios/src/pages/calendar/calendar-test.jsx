@@ -236,7 +236,7 @@ export default function WeeklySchedule() {
         //para receber o token 
         const token = localStorage.getItem('token');    
         //envia toda a informação de quem está a criar este horario 
-        //const user = localStorage.getItem('user');
+        const user = localStorage.getItem('user');
         
         // Junta todos as aulas do horário
         const scheduleList = events.map(event => ({
@@ -246,7 +246,7 @@ export default function WeeklySchedule() {
             //professor: event.extendedProps.professor || 'Desconhecido',
             startHour: new Date(event.start).toTimeString().slice(0, 8),
             endHour: new Date(event.end).toTimeString().slice(0, 8),
-            //createdBy: user
+            createdBy: user
         }));
         
         console.log('Horário guardado:', scheduleList); 

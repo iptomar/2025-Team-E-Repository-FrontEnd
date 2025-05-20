@@ -70,18 +70,26 @@ export const deleteEvent = async (token, eventId) => {
 
 // Create schedule
 export const createSchedule = async ({ courseId, name, startDate, endDate }) => {
+  const user = JSON.parse(localStorage.getItem('user')); 
+
   const response = await fetch(`${API_BASE}/api/schedules`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${localStorage.getItem('token')}`
     },
-    body: JSON.stringify({ courseId, name, startDate, endDate })
+    body: JSON.stringify({ 
+      courseId, 
+      name, 
+      startDate, 
+      endDate,
+      createdBy: user.id 
+    })
   });
 
   if (!response.ok) {
     throw new Error('Erro ao criar calendário');
   }
 
-  return response.json(); // retorna o resultado (ex: {message, scheduleId})
+  return response.json();
 };
