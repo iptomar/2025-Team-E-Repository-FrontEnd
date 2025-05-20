@@ -141,9 +141,12 @@ export default function WeeklySchedule() {
                 ? { ...course, allocatedHours: course.allocatedHours + durationHours }
                 : course
         ));
-
-        setMessage({ text: `Aula de ${selectedCourse.name} adicionada. Clique na aula para selecionar uma sala.`, type: 'success' });
+        // Automatically open room selection modal
+        setSelectedEvent(newEvent);
+        setSelectedRoom('');
+        setShowRoomModal(true); 
         selectInfo.view.calendar.unselect();
+            selectInfo.view.calendar.unselect();
     };
 
     // Handle event click to open room selection modal
