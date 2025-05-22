@@ -98,6 +98,11 @@ export default function WeeklySchedule() {
             selectInfo.view.calendar.unselect();
             return;
         }
+        if (selectInfo.start.getDate() !== selectInfo.end.getDate()) {
+            setMessage({ text: 'Não é permitido criar aulas que atravessem vários dias.', type: 'danger' });
+            selectInfo.view.calendar.unselect();
+            return;
+        }
 
         // Calculate duration in hours
         const start = new Date(selectInfo.start);
@@ -357,6 +362,9 @@ export default function WeeklySchedule() {
                                 selectMirror={true}
                                 dayMaxEvents={true}
                                 select={handleDateSelect}
+                                selectAllow={(selectInfo) => {
+                                    return selectInfo.start.getDate() === selectInfo.end.getDate();
+                                }}
                                 eventClick={handleEventClick}
                                 events={events}
                                 height="auto"
@@ -373,6 +381,7 @@ export default function WeeklySchedule() {
                                     hour12: false
                                 }}
                                 eventContent={renderEventContent}
+                                
                             />
                         </Card.Body>
                     </Card>
