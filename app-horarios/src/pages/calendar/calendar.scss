@@ -59,3 +59,16 @@
 .fc-day-today {
   background-color: transparent !important;
 }
+
+.pagination-controls {
+  margin-top: 15px;
+
+  button {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  span {
+    font-size: 0.85rem;
+  }
+}

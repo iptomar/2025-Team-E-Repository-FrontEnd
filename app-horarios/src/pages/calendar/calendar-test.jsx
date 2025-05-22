@@ -1,5 +1,5 @@
 ﻿// Adicionar bloco ao calendárioimport '@fullcalendar/core'; // Add this line first
-import {useState, useEffect, useRef} from 'react';
+import {useState, useEffect, useRef, Fragment} from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Badge } from 'react-bootstrap';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -24,6 +24,24 @@ export default function WeeklySchedule() {
     const [courses, setCourses] = useState([]);
     const [loadingCourses, setLoadingCourses] = useState(true);
     const [coursesError, setCoursesError] = useState(null);
+
+    // Course search bar
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // State for course pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(2); // Courses per page
+    // Calculate the index of the items to be displayed
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+    const filteredCourses = courses.filter(course =>
+        course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.professor.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
+    const currentCourses = filteredCourses.slice(indexOfFirstItem, indexOfLastItem);
 
     const [rooms] = useState([
         { id: 1, name: 'B257' },
@@ -299,9 +317,9 @@ export default function WeeklySchedule() {
                         <Card.Header className="cardHeader">Cadeiras</Card.Header>
                         <Card.Body>
                             <Form>
-                                {loadingCourses && <Alert variant="info">Carregando cadeiras...</Alert>}
+                                {loadingCourses && <Alert variant="info">A carregar cadeiras...</Alert>}
                                 {coursesError && <Alert variant="danger">{coursesError}</Alert>}
-                                {!loadingCourses && !coursesError && courses.map(course => (
+                                {!loadingCourses && !coursesError && currentCourses.map(course => (
                                     <div key={course.id} className="mb-3">
                                         <Form.Check
                                             type="radio"
@@ -309,14 +327,14 @@ export default function WeeklySchedule() {
                                             name="course"
                                             label={
                                                 <span>
-                        {course.name} <span style={{color: "#888"}}>({course.professor})</span>
-                        <Badge
-                            bg={course.allocatedHours >= course.requiredHours ? "success" : "warning"}
-                            className="ms-2"
-                        >
-                            {course.allocatedHours}/{course.requiredHours}h
-                        </Badge>
-                    </span>
+                                {course.name} <span style={{color: "#888"}}>({course.professor})</span>
+                                <Badge
+                                    bg={course.allocatedHours >= course.requiredHours ? "success" : "warning"}
+                                    className="ms-2"
+                                >
+                                    {course.allocatedHours}/{course.requiredHours}h
+                                </Badge>
+                            </span>
                                             }
                                             onChange={() => setCurrentCourse(course.id)}
                                             checked={currentCourse === course.id}
@@ -325,8 +343,65 @@ export default function WeeklySchedule() {
                                 ))}
                             </Form>
 
+                            {/* Pagination controls */}
+                            {!loadingCourses && !coursesError && courses.length > itemsPerPage && (
+                                <div className="pagination-controls d-flex justify-content-center mt-3">
+
+
+                                </div>
+                            )}
+
+                            {/* Navigation with page numbers */}
+                            {!loadingCourses && !coursesError && courses.length > itemsPerPage && (
+                                <div className="pagination-numbers d-flex justify-content-center mt-2">
+                                    <Button
+                                        variant="outline-secondary"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        &laquo;
+                                    </Button>
+
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                        .filter(number =>
+                                            number === 1 ||
+                                            number === totalPages ||
+                                            Math.abs(number - currentPage) <= 1
+                                        )
+                                        .map((number, index, array) => (
+                                            <Fragment key={number}>
+                                                {index > 0 && array[index - 1] !== number - 1 && (
+                                                    <span className="mx-1 align-self-center">...</span>
+                                                )}
+                                                <Button
+                                                    variant={currentPage === number ? "primary" : "outline-secondary"}
+                                                    size="sm"
+                                                    className="mx-1"
+                                                    onClick={() => setCurrentPage(number)}
+                                                >
+                                                    {number}
+                                                </Button>
+
+                                            </Fragment>
+                                        ))
+                                    }
+                                    <span className="mx-2 align-self-center">
+            Pg. {currentPage} de {totalPages}
+        </span>
+                                    <Button
+                                        variant="outline-secondary"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        &raquo;
+                                    </Button>
+                                </div>
+                            )}
                         </Card.Body>
                     </Card>
+
 
                     <Card className="mb-4 card">
                         <Card.Header className="cardHeader">Instruções</Card.Header>
