@@ -17,8 +17,8 @@ export const fetchEvents = async (token) => {
 };
 
 // Create a new event
-export const createEvent = async (token, event) => {
-    const response = await fetch(`${API_BASE}/api/calendar/events`, {
+export const createEvent = async (scheduleId, token, event) => {
+    const response = await fetch(`${API_BASE}/api/schedules/${scheduleId}/blocks`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -28,10 +28,12 @@ export const createEvent = async (token, event) => {
     });
     const data = await response.json();
     if (!response.ok) {
-        throw new Error(data.message || 'Erro ao criar evento');
+        console.error('Erro do servidor:', data);
+        throw new Error(data.error || data.message || 'Erro ao criar evento');
     }
     return data;
 };
+
 
 // Update an existing event
 export const updateEvent = async (token, eventId, updatedEvent) => {
@@ -64,4 +66,46 @@ export const deleteEvent = async (token, eventId) => {
         throw new Error(data.message || 'Erro ao apagar evento');
     }
     return true;
+};
+
+// Create schedule
+export const createSchedule = async ({ courseId, name, startDate, endDate }) => {
+  const user = JSON.parse(localStorage.getItem('user')); 
+
+  const response = await fetch(`${API_BASE}/api/schedules`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    },
+    body: JSON.stringify({ 
+      courseId, 
+      name, 
+      startDate, 
+      endDate,
+      createdBy: user.id 
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Erro ao criar calendário');
+  }
+
+  return response.json();
+};
+
+
+export const fetchUserSchedules = async (token) => {
+  const response = await fetch(`${API_BASE}/api/schedules/user/me`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Erro ao buscar calendários');
+  }
+  return data;
 };

@@ -3,6 +3,7 @@ import App from "./App";
 import CalendarTest from "./pages/calendar/calendar-test.jsx";
 import Login from "./pages/auth/login/login.jsx";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
+import CalendarsPage from "./pages/home/gestor/main-calendars-page.jsx";
 
 const router = createBrowserRouter([
     { path: "/", element: <Login /> },
@@ -14,7 +15,7 @@ const router = createBrowserRouter([
                 element: <ProtectedRoute />, // Protect all children below
                 children: [
                     { path: "calendario", element: <CalendarTest /> },
-                    // ...other protected routes
+                    { path: "home", element: <CalendarsPage />},
                 ],
             },
         ],
