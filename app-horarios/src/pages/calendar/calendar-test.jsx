@@ -1,6 +1,6 @@
 ﻿// Adicionar bloco ao calendárioimport '@fullcalendar/core'; // Add this line first
 import {useState, useEffect, useRef, Fragment} from 'react';
-import { Container, Row, Col, Card, Button, Form, Alert, Badge } from 'react-bootstrap';
+import {Container, Row, Col, Card, Button, Form, Alert, Badge} from 'react-bootstrap';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -9,7 +9,8 @@ import Modal from 'react-bootstrap/Modal';
 import './Calendar.scss';
 import {fetchSubjectsWithProfessors} from "../../api/courseFetcher.js";
 import {createEvent} from "../../api/calendarFetcher.js"
-import { useNavigate, useLocation } from 'react-router-dom';
+import {useNavigate, useLocation} from 'react-router-dom';
+
 
 /**
  * WeeklySchedule Component
@@ -44,10 +45,10 @@ export default function WeeklySchedule() {
     const currentCourses = filteredCourses.slice(indexOfFirstItem, indexOfLastItem);
 
     const [rooms] = useState([
-        { id: 1, name: 'B257' },
-        { id: 2, name: 'B128' },
-        { id: 3, name: 'B255' },
-        { id: 4, name: 'I184' },
+        {id: 1, name: 'B257'},
+        {id: 2, name: 'B128'},
+        {id: 3, name: 'B255'},
+        {id: 4, name: 'I184'},
     ]);
 
     // State for calendar events
@@ -57,7 +58,7 @@ export default function WeeklySchedule() {
     const [currentCourse, setCurrentCourse] = useState(null);
 
     // State for validation messages
-    const [message, setMessage] = useState({ text: '', type: '' });
+    const [message, setMessage] = useState({text: '', type: ''});
 
     // State to check if schedule is complete
     const [scheduleComplete, setScheduleComplete] = useState(false);
@@ -71,9 +72,9 @@ export default function WeeklySchedule() {
     const calendarRef = useRef(null);
 
     const location = useLocation();
-    
-    const { scheduleId } = location.state
-    
+
+    const {scheduleId} = location.state
+
 
     useEffect(() => {
         const loadCourses = async () => {
@@ -112,12 +113,12 @@ export default function WeeklySchedule() {
     // Handle date selection in calendar
     const handleDateSelect = (selectInfo) => {
         if (!currentCourse) {
-            setMessage({ text: 'Selecione uma cadeira antes de adicionar ao horário', type: 'warning' });
+            setMessage({text: 'Selecione uma cadeira antes de adicionar ao horário', type: 'warning'});
             selectInfo.view.calendar.unselect();
             return;
         }
         if (selectInfo.start.getDate() !== selectInfo.end.getDate()) {
-            setMessage({ text: 'Não é permitido criar aulas que atravessem vários dias.', type: 'danger' });
+            setMessage({text: 'Não é permitido criar aulas que atravessem vários dias.', type: 'danger'});
             selectInfo.view.calendar.unselect();
             return;
         }
@@ -135,7 +136,7 @@ export default function WeeklySchedule() {
         });
 
         if (hasOverlap) {
-            setMessage({ text: 'Já existe uma aula neste horário', type: 'danger' });
+            setMessage({text: 'Já existe uma aula neste horário', type: 'danger'});
             selectInfo.view.calendar.unselect();
             return;
         }
@@ -161,15 +162,15 @@ export default function WeeklySchedule() {
         // Update allocated hours
         setCourses(courses.map(course =>
             course.id === currentCourse
-                ? { ...course, allocatedHours: course.allocatedHours + durationHours }
+                ? {...course, allocatedHours: course.allocatedHours + durationHours}
                 : course
         ));
         // Automatically open room selection modal
         setSelectedEvent(newEvent);
         setSelectedRoom('');
-        setShowRoomModal(true); 
+        setShowRoomModal(true);
         selectInfo.view.calendar.unselect();
-            selectInfo.view.calendar.unselect();
+        selectInfo.view.calendar.unselect();
     };
 
     // Handle event click to open room selection modal
@@ -183,7 +184,7 @@ export default function WeeklySchedule() {
     // Handle room assignment
     const handleRoomAssign = () => {
         if (!selectedRoom) {
-            setMessage({ text: 'Selecione uma sala para a aula', type: 'warning' });
+            setMessage({text: 'Selecione uma sala para a aula', type: 'warning'});
             return;
         }
 
@@ -204,7 +205,7 @@ export default function WeeklySchedule() {
         });
 
         if (roomConflict) {
-            setMessage({ text: 'Esta sala já está ocupada neste horário', type: 'danger' });
+            setMessage({text: 'Esta sala já está ocupada neste horário', type: 'danger'});
             return;
         }
 
@@ -227,7 +228,7 @@ export default function WeeklySchedule() {
 
 
         setShowRoomModal(false);
-        setMessage({ text: `Sala atribuída com sucesso!`, type: 'success' });
+        setMessage({text: `Sala atribuída com sucesso!`, type: 'success'});
     };
 
     // Handle event removal
@@ -238,16 +239,16 @@ export default function WeeklySchedule() {
         // Update allocated hours
         setCourses(courses.map(course =>
             course.id === courseId
-                ? { ...course, allocatedHours: Math.max(0, course.allocatedHours - duration) }
+                ? {...course, allocatedHours: Math.max(0, course.allocatedHours - duration)}
                 : course
         ));
 
         setEvents(events.filter(e => parseInt(e.id) !== parseInt(selectedEvent.id)));
         setShowRoomModal(false);
-        setMessage({ text: 'Aula removida com sucesso!', type: 'info' });
+        setMessage({text: 'Aula removida com sucesso!', type: 'info'});
     };
 
-     
+
     const saveSchedule = async () => {
         const eventsWithoutRooms = events.filter(event => !event.extendedProps.room);
 
@@ -260,10 +261,10 @@ export default function WeeklySchedule() {
         }
 
         //para receber o token 
-        const token = localStorage.getItem('token');    
+        const token = localStorage.getItem('token');
         //envia toda a informação de quem está a criar este horario 
         const user = localStorage.getItem('user');
-        
+
         // Junta todos as aulas do horário
         const scheduleList = events.map(event => ({
             subjectId: event.extendedProps.courseId,
@@ -274,8 +275,8 @@ export default function WeeklySchedule() {
             endHour: new Date(event.end).toTimeString().slice(0, 8),
             createdBy: user
         }));
-        
-        console.log('Horário guardado:', scheduleList); 
+
+        console.log('Horário guardado:', scheduleList);
 
         try {
             for (const scheduleData of scheduleList) {
@@ -283,10 +284,10 @@ export default function WeeklySchedule() {
                 navigate('/home');
             }
 
-            setMessage({ text: 'Horário guardado com sucesso!', type: 'success' });
+            setMessage({text: 'Horário guardado com sucesso!', type: 'success'});
             alert('Horário guardado com sucesso!');
         } catch (error) {
-            setMessage({ text: error.message, type: 'error' });
+            setMessage({text: error.message, type: 'error'});
         }
     };
 
@@ -306,7 +307,7 @@ export default function WeeklySchedule() {
             <h2 className="headerText text-center">Plataforma de Gestão de Horários</h2>
 
             {message.text && (
-                <Alert variant={message.type} onClose={() => setMessage({ text: '', type: '' })} dismissible>
+                <Alert variant={message.type} onClose={() => setMessage({text: '', type: ''})} dismissible>
                     {message.text}
                 </Alert>
             )}
@@ -316,32 +317,56 @@ export default function WeeklySchedule() {
                     <Card className="mb-4 card">
                         <Card.Header className="cardHeader">Cadeiras</Card.Header>
                         <Card.Body>
-                            <Form>
-                                {loadingCourses && <Alert variant="info">A carregar cadeiras...</Alert>}
-                                {coursesError && <Alert variant="danger">{coursesError}</Alert>}
-                                {!loadingCourses && !coursesError && currentCourses.map(course => (
-                                    <div key={course.id} className="mb-3">
-                                        <Form.Check
-                                            type="radio"
-                                            id={`course-${course.id}`}
-                                            name="course"
-                                            label={
-                                                <span>
-                                {course.name} <span style={{color: "#888"}}>({course.professor})</span>
-                                <Badge
-                                    bg={course.allocatedHours >= course.requiredHours ? "success" : "warning"}
-                                    className="ms-2"
-                                >
-                                    {course.allocatedHours}/{course.requiredHours}h
-                                </Badge>
-                            </span>
-                                            }
-                                            onChange={() => setCurrentCourse(course.id)}
-                                            checked={currentCourse === course.id}
-                                        />
-                                    </div>
-                                ))}
-                            </Form>
+                            {/* Search Bar */}
+                            <Form.Group className="mb-3 position-relative">
+                                <i className="bi bi-search position-absolute align-middle search-icon"></i>
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Pesquisar cadeira ou professor..."
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    className="search-input search-input-custom"
+                                />
+                                {searchTerm && (
+                                    <Button
+                                        variant="link"
+                                        className="position-absolute clear-search-button"
+                                        onClick={() => {
+                                            setSearchTerm('');
+                                            setCurrentPage(1);
+                                        }}
+                                    >
+                                        <i className="bi bi-x align-middle"></i>
+                                    </Button>
+                                )}
+                            </Form.Group>
+
+
+                            {!loadingCourses && !coursesError && currentCourses.map(course => (
+                                <div key={course.id} className="mb-3">
+                                    <Form.Check
+                                        type="radio"
+                                        id={`course-${course.id}`}
+                                        name="course"
+                                        label={
+                                            <span>
+                    {course.name} <span className="professor-badge">({course.professor})</span>
+                    <Badge
+                        bg={course.allocatedHours >= course.requiredHours ? "success" : "warning"}
+                        className="ms-2"
+                    >
+                        {course.allocatedHours}/{course.requiredHours}h
+                    </Badge>
+                </span>
+                                        }
+                                        onChange={() => setCurrentCourse(course.id)}
+                                        checked={currentCourse === course.id}
+                                    />
+                                </div>
+                            ))}
 
                             {/* Pagination controls */}
                             {!loadingCourses && !coursesError && courses.length > itemsPerPage && (
@@ -363,7 +388,7 @@ export default function WeeklySchedule() {
                                         &laquo;
                                     </Button>
 
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                    {Array.from({length: totalPages}, (_, i) => i + 1)
                                         .filter(number =>
                                             number === 1 ||
                                             number === totalPages ||
@@ -424,9 +449,9 @@ export default function WeeklySchedule() {
                                 ref={calendarRef}
                                 plugins={[timeGridPlugin, interactionPlugin]}
                                 initialView="timeGridWeek"
-                                headerToolbar= {false}
-                                titleFormat={{ weekday: 'long' }}
-                                dayHeaderFormat={{ weekday: 'short' }}
+                                headerToolbar={false}
+                                titleFormat={{weekday: 'long'}}
+                                dayHeaderFormat={{weekday: 'short'}}
                                 slotDuration="00:30:00"
                                 slotMinTime="08:30:00"
                                 slotMaxTime="23:30:00"
@@ -456,7 +481,7 @@ export default function WeeklySchedule() {
                                     hour12: false
                                 }}
                                 eventContent={renderEventContent}
-                                
+
                             />
                         </Card.Body>
                     </Card>
@@ -470,7 +495,8 @@ export default function WeeklySchedule() {
                                         <Col md={9}>
                                             {scheduleComplete ? (
                                                 <Alert variant="success">
-                                                    Todas as horas foram alocadas e todas as aulas têm salas atribuídas! O horário está completo.
+                                                    Todas as horas foram alocadas e todas as aulas têm salas atribuídas!
+                                                    O horário está completo.
                                                 </Alert>
                                             ) : (
                                                 <Alert variant="warning">
@@ -503,10 +529,24 @@ export default function WeeklySchedule() {
                 <Modal.Body>
                     {selectedEvent && (
                         <>
-                            <p><strong>Cadeira:</strong> {courses.find(c => c.id === selectedEvent.extendedProps.courseId).name}</p>
-                            <p><strong>Professor:</strong> {courses.find(c => c.id === selectedEvent.extendedProps.courseId).professor}</p>
-                            <p><strong>Horário:</strong> {new Date(selectedEvent.start).toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'})} - {new Date(selectedEvent.end).toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'})}</p>
-                            <p><strong>Dia:</strong> {new Date(selectedEvent.start).toLocaleDateString('pt-PT', {weekday: 'long', day: 'numeric', month: 'long'})}</p>
+                            <p>
+                                <strong>Cadeira:</strong> {courses.find(c => c.id === selectedEvent.extendedProps.courseId).name}
+                            </p>
+                            <p>
+                                <strong>Professor:</strong> {courses.find(c => c.id === selectedEvent.extendedProps.courseId).professor}
+                            </p>
+                            <p><strong>Horário:</strong> {new Date(selectedEvent.start).toLocaleTimeString('pt-PT', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })} - {new Date(selectedEvent.end).toLocaleTimeString('pt-PT', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}</p>
+                            <p><strong>Dia:</strong> {new Date(selectedEvent.start).toLocaleDateString('pt-PT', {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'long'
+                            })}</p>
 
                             <Form.Group className="mb-3">
                                 <Form.Label>Sala:</Form.Label>

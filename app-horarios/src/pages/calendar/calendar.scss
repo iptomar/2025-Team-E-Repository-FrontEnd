@@ -1,5 +1,4 @@
-﻿/* IPT Weekly Schedule Styles */
-
+﻿
 .mainContainer {
   background-color: #ffffff;
   padding: 20px;
@@ -71,4 +70,38 @@
   span {
     font-size: 0.85rem;
   }
+}
+
+.search-input {
+  margin-bottom: 15px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+
+  &:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+}
+// Estilos para badges de professor
+.professor-badge {
+  color: #888;
+}
+
+// Estilos para ícone de pesquisa
+.search-icon {
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+// Estilos para botão de limpar pesquisa
+.clear-search-button {
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+// Estilos para input de pesquisa com padding personalizado
+.search-input-custom {
+  padding-left: 35px !important;
 }
