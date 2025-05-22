@@ -4,6 +4,7 @@ import CalendarTest from "./pages/calendar/calendar-test.jsx";
 import Login from "./pages/auth/login/login.jsx";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
 import CalendarsPage from "./pages/home/gestor/main-calendars-page.jsx";
+import AdminDashboard from "./pages/backoffice/AdminDashboard.jsx";
 
 const router = createBrowserRouter([
     { path: "/", element: <Login /> },
@@ -16,6 +17,7 @@ const router = createBrowserRouter([
                 children: [
                     { path: "calendario", element: <CalendarTest /> },
                     { path: "home", element: <CalendarsPage />},
+                    { path: "backoffice", element: <AdminDashboard />},
                 ],
             },
         ],
