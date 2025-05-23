@@ -13,13 +13,13 @@ const AdminDashboard = () => {
     }, [navigate]);
 
     const sections = [
-        { title: "Escolas", link: "/admin/schools", description: "Gerir Escolas" },
-        { title: "Cursos", link: "/admin/courses", description: "Gerir Cursos" },
-        { title: "Cadeiras", link: "/admin/subjects", description: "Gerir Unidades Curriculares" },
-        { title: "Salas", link: "/admin/roles", description: "Gerir Salas" },
-        { title: "Utilizadores", link: "/admin/people", description: "Gerir Contas de Utilizadores" },
-        { title: "Professores <> Cadeiras", link: "/admin/people", description: "Gerir Professores de Cadeiras" },
-        { title: "Cadeiras <> Cursos", link: "/admin/people", description: "Gerir Cadeiras de Cursos" }
+        { title: "Escolas", link: "/backoffice/schools", description: "Gerir Escolas" },
+        { title: "Cursos", link: "/backoffice/courses", description: "Gerir Cursos" },
+        { title: "Cadeiras", link: "/backoffice/subjects", description: "Gerir Unidades Curriculares" },
+        { title: "Salas", link: "/backoffice/roles", description: "Gerir Salas" },
+        { title: "Utilizadores", link: "/backoffice/people", description: "Gerir Contas de Utilizadores" },
+        { title: "Professores <> Cadeiras", link: "/backoffice/people", description: "Gerir Professores de Cadeiras" },
+        { title: "Cadeiras <> Cursos", link: "/backoffice/people", description: "Gerir Cadeiras de Cursos" }
     ];
 
     return (
