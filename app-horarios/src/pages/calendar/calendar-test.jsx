@@ -8,6 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Modal from 'react-bootstrap/Modal';
 import './Calendar.scss';
 import {fetchSubjectsWithProfessors} from "../../api/courseFetcher.js";
+import {fetchClassrooms} from "../../api/classroomFetcher.js";
 import {createEvent} from "../../api/calendarFetcher.js"
 import {useNavigate, useLocation} from 'react-router-dom';
 
@@ -44,13 +45,7 @@ export default function WeeklySchedule() {
     const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
     const currentCourses = filteredCourses.slice(indexOfFirstItem, indexOfLastItem);
 
-    const [rooms] = useState([
-        {id: 1, name: 'B257'},
-        {id: 2, name: 'B128'},
-        {id: 3, name: 'B255'},
-        {id: 4, name: 'I184'},
-    ]);
-
+    const [rooms, setRooms] = useState([]);
     // State for calendar events
     const [events, setEvents] = useState([]);
 
@@ -74,7 +69,7 @@ export default function WeeklySchedule() {
     const location = useLocation();
 
     const {scheduleId} = location.state
-
+    console.log(scheduleId);
 
     useEffect(() => {
         const loadCourses = async () => {
@@ -82,6 +77,8 @@ export default function WeeklySchedule() {
             setCoursesError(null);
             try {
                 const data = await fetchSubjectsWithProfessors();
+                const rooms = await fetchClassrooms();
+                setRooms(rooms);
                 const colorPalette = ['#b25d31', '#5d9b42', '#4285f4', '#aa46bb', '#f4b400'];
                 const transformed = data.map((subject, index) => ({
                     id: subject.Id,
