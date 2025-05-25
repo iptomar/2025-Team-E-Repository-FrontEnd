@@ -1,5 +1,4 @@
-﻿// Adicionar bloco ao calendárioimport '@fullcalendar/core'; // Add this line first
-import {useState, useEffect, useRef, Fragment} from "react";
+﻿import {useState, useEffect, useRef, Fragment} from "react";
 import {
     Container,
     Row,
@@ -15,18 +14,18 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Modal from "react-bootstrap/Modal";
-import "./Calendar.scss";
-import {fetchSubjectsWithProfessors} from "../../api/courseFetcher.js";
-import {createEvent} from "../../api/calendarFetcher.js";
+import "./Create.scss";
+import {fetchSubjectsWithProfessors} from "../../../api/courseFetcher.js";
+import {createEvent} from "../../../api/calendarFetcher.js";
 import {useNavigate, useLocation} from "react-router-dom";
 
 /**
- * WeeklySchedule Component
+ * CalendarCreate Component
  *
  * This component implements a weekly schedule management system that follows
  * the IPT (Instituto Politécnico de Tomar) design style.
  */
-export default function WeeklySchedule() {
+export default function CalendarCreate() {
     const navigate = useNavigate();
 
     // State for courses.jsx and their required hours
