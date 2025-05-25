@@ -67,7 +67,7 @@ const iptStyles = {
  * the IPT (Instituto Politécnico de Tomar) design style.
  */
 export default function WeeklySchedule() {
-    // State for courses and their required hours
+    // State for courses.jsx and their required hours
     const [courses, setCourses] = useState([
         { id: 1, name: 'An. Matemática II', requiredHours: 3, allocatedHours: 0, color: '#b25d31' },
         { id: 2, name: 'Prog. Orient. Obj.', requiredHours: 3, allocatedHours: 0, color: '#5d9b42' },
@@ -104,7 +104,7 @@ export default function WeeklySchedule() {
     // Calendar reference
     const calendarRef = useRef(null);
 
-    // Check if all courses have their hours allocated and all events have rooms
+    // Check if all courses.jsx have their hours allocated and all events have rooms
     useEffect(() => {
         const allAllocated = courses.every(course =>
             course.allocatedHours >= course.requiredHours

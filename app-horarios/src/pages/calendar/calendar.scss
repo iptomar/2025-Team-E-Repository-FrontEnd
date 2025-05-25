@@ -1,4 +1,4 @@
-﻿
+﻿/* ===== MAIN LAYOUT ===== */
 .mainContainer {
   background-color: #ffffff;
   padding: 20px;
@@ -6,16 +6,29 @@
   margin: 0 auto;
 }
 
+/* ===== TYPOGRAPHY ===== */
 .headerText {
   color: #b25d31;
   margin-bottom: 30px;
   font-weight: 500;
 }
 
+.instituteName {
+  margin-left: 15px;
+  color: #333;
+}
+
+/* ===== CARDS & CONTAINERS ===== */
 .card {
   border: 1px solid #e0e0e0;
   border-radius: 4px;
   box-shadow: none;
+  overflow: hidden; /* Prevent content from spilling out */
+}
+
+.card .card-body {
+  padding: 1rem;
+  overflow-x: hidden; /* Prevent horizontal overflow */
 }
 
 .cardHeader {
@@ -25,6 +38,7 @@
   border: none;
 }
 
+/* ===== BUTTONS ===== */
 .button {
   background-color: #b25d31;
   border-color: #b25d31;
@@ -32,12 +46,56 @@
   font-weight: 400;
 }
 
+/* ===== FORM CONTROLS ===== */
 .formControl {
   border: 1px solid #ced4da;
   border-radius: 4px;
   padding: 8px 12px;
 }
 
+/* ===== SEARCH FUNCTIONALITY ===== */
+.search-input {
+  margin-bottom: 15px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+
+  &:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+}
+
+.search-input-custom {
+  padding-left: 35px !important;
+}
+
+.search-icon {
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.clear-search-button {
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ===== BADGES & LABELS ===== */
+/* Professor information badge */
+.professor-badge {
+  color: #888;
+}
+
+/* Course typology badge (TP, P, T) */
+.tipology-badge {
+  color: #666;
+  font-size: 0.85em;
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+/* ===== LOGO & BRANDING ===== */
 .logoContainer {
   display: flex;
   align-items: center;
@@ -50,58 +108,293 @@
   width: auto;
 }
 
-.instituteName {
-  margin-left: 15px;
-  color: #333;
+/* ===== PAGINATION - RESPONSIVE ===== */
+.pagination-simple {
+  gap: 2px;
+  flex-wrap: nowrap; /* Prevent wrapping */
+  max-width: 100%;
+  justify-content: center;
+  align-items: center;
 }
 
+.pagination-btn {
+  min-width: 24px;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.3rem;
+  flex-shrink: 0;
+  border-width: 1px;
+}
+
+.pagination-info {
+  font-size: 0.7rem;
+  color: #666;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+
+/* ===== THIRD-PARTY OVERRIDES ===== */
+/* FullCalendar customization */
 .fc-day-today {
   background-color: transparent !important;
 }
 
-.pagination-controls {
-  margin-top: 15px;
-
-  button {
-    font-size: 0.85rem;
-    padding: 0.25rem 0.5rem;
-  }
-
-  span {
-    font-size: 0.85rem;
-  }
+/* ===== COURSE CARDS GRID ===== */
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
 }
 
-.search-input {
-  margin-bottom: 15px;
-  border-radius: 4px;
-  border: 1px solid #ced4da;
+/* Square aspect ratio wrapper */
+.course-card-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Modern browsers */
 
-  &:focus {
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  /* Fallback for older browsers */
+  &::before {
+    content: '';
+    display: block;
+    padding-bottom: 100%;
   }
 }
-// Estilos para badges de professor
-.professor-badge {
-  color: #888;
+
+/* Course card content */
+.course-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #b25d31;
+    box-shadow: 0 2px 8px rgba(178, 93, 49, 0.1);
+  }
 }
 
-// Estilos para ícone de pesquisa
-.search-icon {
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+/* Selected state */
+.course-card:has(.course-radio:checked) {
+  border-color: #b25d31;
+  background-color: #fef7f3;
+  box-shadow: 0 2px 8px rgba(178, 93, 49, 0.2);
 }
 
-// Estilos para botão de limpar pesquisa
-.clear-search-button {
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
+/* Hide the radio button visually but keep it functional */
+.course-radio {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+  pointer-events: none;
 }
 
-// Estilos para input de pesquisa com padding personalizado
-.search-input-custom {
-  padding-left: 35px !important;
+/* Course content layout */
+.course-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+  justify-content: space-between;
+}
+
+/* Tipology badge at top */
+.tipology-badge-top {
+  background-color: #ffc107;
+  color: #000;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* Course title */
+.course-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.2;
+  margin-bottom: 8px;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+}
+
+/* Professor name */
+.professor-name {
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+/* Hours badge */
+.hours-badge {
+  font-size: 0.7rem !important;
+  padding: 2px 6px !important;
+}
+
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+
+/* Desktop layout (1000px and above) */
+@media (min-width: 1000px) {
+  .courses-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+  }
+}
+
+/* Mobile layout transition (under 1000px) */
+@media (max-width: 1100px) {
+  /* Force full width layout */
+  .row > [class*="col-"] {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Stack cards vertically on mobile */
+  .mainContainer .row {
+    flex-direction: column;
+  }
+
+  /* Adjust card spacing for mobile */
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  .courses-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+  }
+
+  .pagination-simple {
+    gap: 1px;
+  }
+
+  .pagination-btn {
+    min-width: 20px;
+    font-size: 0.65rem;
+    padding: 0.1rem 0.2rem;
+  }
+
+  .pagination-info {
+    font-size: 0.65rem;
+    margin: 0 2px;
+  }
+}
+
+/* Tablet adjustments (768px - 1100) */
+@media (min-width: 768px) and (max-width: 1100px) {
+  .courses-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+  }
+
+  .course-card {
+    padding: 10px;
+  }
+}
+
+/* Small mobile (under 768px) */
+@media (max-width: 767px) {
+  .mainContainer {
+    padding: 15px;
+  }
+
+  .courses-grid {
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 8px;
+  }
+
+  .course-card {
+    padding: 8px;
+  }
+
+  .course-title {
+    font-size: 0.75rem;
+  }
+
+  .professor-name {
+    font-size: 0.65rem;
+  }
+
+  .pagination-btn {
+    min-width: 18px;
+    font-size: 0.6rem;
+    padding: 0.08rem 0.15rem;
+  }
+
+  .pagination-info {
+    font-size: 0.6rem;
+    margin: 0 1px;
+  }
+}
+
+/* Very small mobile (under 576px) */
+@media (max-width: 575px) {
+  .courses-grid {
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 6px;
+  }
+
+  .course-card {
+    padding: 6px;
+  }
+
+  .course-title {
+    font-size: 0.7rem;
+  }
+
+  .professor-name {
+    font-size: 0.6rem;
+  }
+
+  /* Hide page numbers on very small screens */
+  .pagination-simple .pagination-btn:not(:first-child):not(:last-child) {
+    display: none;
+  }
+
+  .pagination-info {
+    margin: 0 8px;
+  }
+}
+
+/* Extra small screens (under 400px) */
+@media (max-width: 399px) {
+  .mainContainer {
+    padding: 10px;
+  }
+
+  .courses-grid {
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 4px;
+  }
+
+  .course-card {
+    padding: 4px;
+  }
+
+  .course-title {
+    font-size: 0.65rem;
+  }
+
+  .professor-name {
+    font-size: 0.55rem;
+  }
 }
