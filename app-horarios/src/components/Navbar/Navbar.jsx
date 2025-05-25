@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import iptLogo from "../../assets/ipt-logo-full.png";
 import "./Navbar.scss";
 import { useAuth } from "../../contexts/AuthContext.jsx";
+import {FULL_ROUTES} from "../../routes.jsx";
 
 const Navbar = () => {
     const { isAuthenticated } = useAuth();
@@ -14,7 +15,7 @@ const Navbar = () => {
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        navigate("/"); // Redirect to login
+        navigate(FULL_ROUTES.LOGIN); // Redirect to login
     };
 
     const getPageTitle = () => {

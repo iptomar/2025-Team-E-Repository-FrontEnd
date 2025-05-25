@@ -5,27 +5,26 @@ import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
 import CalendarListing from "./pages/home/gestor/main-calendars-page.jsx";
 import CalendarCreate from "./pages/calendar/create/Create.jsx";
 import CalendarView from "./pages/calendar/view/View.jsx";
-
-
+import {ROUTES} from "./routes.jsx";
 
 const router = createBrowserRouter([
-    { path: "/", element: <Login /> },
+    { path: ROUTES.LOGIN, element: <Login /> },
     {
         path: "/",
         element: <App />,
         children: [
             {
-                element: <ProtectedRoute />, // Protect all children below
+                element: <ProtectedRoute />,
                 children: [
-                    { path: "home", element: <CalendarListing />},
+                    { path: ROUTES.HOME, element: <CalendarListing />},
                     {
-                        path: "calendar/",
+                        path: ROUTES.CALENDAR_ROOT,
                         children: [
                             {
                                 children: [
-                                    { path: "", element: <CalendarListing /> },
-                                    { path: "create", element: <CalendarCreate />},
-                                    { path: ":scheduleId/view", element: <CalendarView />},
+                                    { path: ROUTES.CALENDAR_LISTING, element: <CalendarListing /> },
+                                    { path: ROUTES.CALENDAR_CREATE, element: <CalendarCreate />},
+                                    { path: ROUTES.CALENDAR_VIEW, element: <CalendarView />},
                                 ],
                             },
                         ]},

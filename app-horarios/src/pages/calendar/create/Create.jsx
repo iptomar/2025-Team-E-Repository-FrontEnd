@@ -18,6 +18,7 @@ import "./Create.scss";
 import {fetchSubjectsWithProfessors} from "../../../api/courseFetcher.js";
 import {createEvent} from "../../../api/calendarFetcher.js";
 import {useNavigate, useLocation} from "react-router-dom";
+import {FULL_ROUTES} from "../../../routes.jsx";
 
 /**
  * CalendarCreate Component
@@ -320,7 +321,7 @@ export default function CalendarCreate() {
         try {
             for (const scheduleData of scheduleList) {
                 await createEvent(scheduleId, token, scheduleData);
-                navigate("/home");
+                navigate(FULL_ROUTES.HOME);
             }
 
             setMessage({text: "Horário guardado com sucesso!", type: "success"});
