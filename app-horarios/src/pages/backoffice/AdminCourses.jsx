@@ -10,6 +10,7 @@ const API_BASE = import.meta.env.VITE_WS_URL;
 const AdminCourses = () => {
     const token = localStorage.getItem("token");
     const [courses, setCourses] = useState([]);
+    const [schools, setSchools] = useState([]);
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -40,8 +41,20 @@ const AdminCourses = () => {
         }
     };
 
+    const fetchSchools = async () => {
+        try {
+            const res = await axios.get(`${API_BASE}/api/admin/schools`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSchools(res.data.data || []);
+        } catch (err) {
+            console.error("Erro ao carregar escolas:", err);
+        }
+    };
+
     useEffect(() => {
         fetchCourses();
+        fetchSchools();
     }, [page]);
 
     const debounceRef = useRef(null);
@@ -55,7 +68,12 @@ const AdminCourses = () => {
     }, [search]);
 
     const openCreateModal = () => {
-        setModalData({ id: null, IdCourse: "", Name: "", SchoolFK: "" });
+        setModalData({
+            id: null,
+            IdCourse: "",
+            Name: "",
+            SchoolFK: ""
+        });
         setShowModal(true);
     };
 
@@ -90,16 +108,19 @@ const AdminCourses = () => {
         }
 
         try {
+            const payload = {
+                IdCourse, Name, SchoolFK,
+                [isEditMode ? "UpdatedBy" : "CreatedBy"]: "admin"
+            };
+
             if (isEditMode) {
-                await axios.put(`${API_BASE}/api/admin/courses/${modalData.id}`, {
-                    ...modalData,
-                    UpdatedBy: "admin"
-                }, { headers: { Authorization: `Bearer ${token}` } });
+                await axios.put(`${API_BASE}/api/admin/courses/${modalData.id}`, payload, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
             } else {
-                await axios.post(`${API_BASE}/api/admin/courses`, {
-                    ...modalData,
-                    CreatedBy: "admin"
-                }, { headers: { Authorization: `Bearer ${token}` } });
+                await axios.post(`${API_BASE}/api/admin/courses`, payload, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
             }
             setShowModal(false);
             fetchCourses();
@@ -130,7 +151,7 @@ const AdminCourses = () => {
                     <Table striped bordered hover responsive>
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Código</th>
                                 <th>Nome</th>
                                 <th>Escola</th>
                                 <th>Ações</th>
@@ -139,32 +160,17 @@ const AdminCourses = () => {
                         <tbody>
                             {courses.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4" className="text-center text-muted">
-                                        Sem resultados encontrados.
-                                    </td>
+                                    <td colSpan="4" className="text-center text-muted">Sem resultados encontrados.</td>
                                 </tr>
                             ) : (
                                 courses.map((course) => (
                                     <tr key={course.Id}>
                                         <td>{course.IdCourse}</td>
                                         <td>{course.Name}</td>
-                                        <td>{course.SchoolFK}</td>
+                                        <td>{course.SchoolName || "—"}</td>
                                         <td>
-                                            <Button
-                                                variant="outline-primary"
-                                                size="sm"
-                                                onClick={() => openEditModal(course)}
-                                                className="me-2"
-                                            >
-                                                Editar
-                                            </Button>
-                                            <Button
-                                                variant="outline-danger"
-                                                size="sm"
-                                                onClick={() => handleDelete(course.Id)}
-                                            >
-                                                Apagar
-                                            </Button>
+                                            <Button variant="outline-primary" size="sm" onClick={() => openEditModal(course)} className="me-2">Editar</Button>
+                                            <Button variant="outline-danger" size="sm" onClick={() => handleDelete(course.Id)}>Apagar</Button>
                                         </td>
                                     </tr>
                                 ))
@@ -174,23 +180,13 @@ const AdminCourses = () => {
 
                     {totalPages > 1 && (
                         <Pagination className="justify-content-center">
-                            <Pagination.Prev
-                                disabled={page === 1}
-                                onClick={() => setPage(page - 1)}
-                            />
+                            <Pagination.Prev disabled={page === 1} onClick={() => setPage(page - 1)} />
                             {Array.from({ length: totalPages }, (_, i) => (
-                                <Pagination.Item
-                                    key={i + 1}
-                                    active={i + 1 === page}
-                                    onClick={() => setPage(i + 1)}
-                                >
+                                <Pagination.Item key={i + 1} active={i + 1 === page} onClick={() => setPage(i + 1)}>
                                     {i + 1}
                                 </Pagination.Item>
                             ))}
-                            <Pagination.Next
-                                disabled={page === totalPages}
-                                onClick={() => setPage(page + 1)}
-                            />
+                            <Pagination.Next disabled={page === totalPages} onClick={() => setPage(page + 1)} />
                         </Pagination>
                     )}
                 </>
@@ -203,28 +199,21 @@ const AdminCourses = () => {
                 <Modal.Body>
                     <Form>
                         <Form.Group className="mb-3">
-                            <Form.Label>ID Curso</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={modalData.IdCourse}
-                                onChange={(e) => setModalData({ ...modalData, IdCourse: e.target.value })}
-                            />
+                            <Form.Label>Código</Form.Label>
+                            <Form.Control type="text" value={modalData.IdCourse} onChange={(e) => setModalData({ ...modalData, IdCourse: e.target.value })} />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Nome</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={modalData.Name}
-                                onChange={(e) => setModalData({ ...modalData, Name: e.target.value })}
-                            />
+                            <Form.Control type="text" value={modalData.Name} onChange={(e) => setModalData({ ...modalData, Name: e.target.value })} />
                         </Form.Group>
                         <Form.Group className="mb-3">
-                            <Form.Label>Escola FK</Form.Label>
-                            <Form.Control
-                                type="number"
-                                value={modalData.SchoolFK}
-                                onChange={(e) => setModalData({ ...modalData, SchoolFK: e.target.value })}
-                            />
+                            <Form.Label>Escola</Form.Label>
+                            <Form.Select value={modalData.SchoolFK} onChange={(e) => setModalData({ ...modalData, SchoolFK: e.target.value })}>
+                                <option value="">Seleciona uma escola</option>
+                                {schools.map(s => (
+                                    <option key={s.Id} value={s.Id}>{s.Name}</option>
+                                ))}
+                            </Form.Select>
                         </Form.Group>
                     </Form>
                 </Modal.Body>
