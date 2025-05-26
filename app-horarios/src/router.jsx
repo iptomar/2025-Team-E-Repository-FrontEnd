@@ -11,6 +11,7 @@ import AdminSubjects from "./pages/backoffice/AdminSubjects.jsx";
 import AdminClassrooms from "./pages/backoffice/AdminClassrooms.jsx";
 import AdminPeople from "./pages/backoffice/AdminPeople.jsx";
 import AdminProfSubj from "./pages/backoffice/AdminProfSubj.jsx";
+import AdminCourseSubj from "./pages/backoffice/AdminCourseSubj.jsx";
 
 const router = createBrowserRouter([
     { path: "/", element: <Login /> },
@@ -29,7 +30,8 @@ const router = createBrowserRouter([
                     { path: "backoffice/subjects", element: <AdminSubjects /> },
                     { path: "backoffice/classrooms", element: <AdminClassrooms /> },
                     { path: "backoffice/people", element: <AdminPeople /> },
-                    { path: "backoffice/profsubj", element: <AdminProfSubj /> }
+                    { path: "backoffice/profsubj", element: <AdminProfSubj /> },
+                    { path: "backoffice/coursesubj", element: <AdminCourseSubj /> }
                 ],
             },
         ],

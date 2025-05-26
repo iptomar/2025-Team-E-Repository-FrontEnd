@@ -19,7 +19,7 @@ const AdminDashboard = () => {
         { title: "Salas", link: "/backoffice/classrooms", description: "Gerir Salas" },
         { title: "Utilizadores", link: "/backoffice/people", description: "Gerir Contas de Utilizadores" },
         { title: "Professores <> Cadeiras", link: "/backoffice/profsubj", description: "Gerir Professores de Cadeiras" },
-        { title: "Cadeiras <> Cursos", link: "/backoffice/people", description: "Gerir Cadeiras de Cursos" }
+        { title: "Cadeiras <> Cursos", link: "/backoffice/coursesubj", description: "Gerir Cadeiras de Cursos" }
     ];
 
     return (
