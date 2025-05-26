@@ -10,6 +10,7 @@ const API_BASE = import.meta.env.VITE_WS_URL;
 const AdminClassrooms = () => {
     const token = localStorage.getItem("token");
     const [classrooms, setClassrooms] = useState([]);
+    const [schools, setSchools] = useState([]);
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -40,8 +41,20 @@ const AdminClassrooms = () => {
         }
     };
 
+    const fetchSchools = async () => {
+        try {
+            const res = await axios.get(`${API_BASE}/api/admin/schools`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSchools(res.data.data || []);
+        } catch (err) {
+            console.error("Erro ao carregar escolas:", err);
+        }
+    };
+
     useEffect(() => {
         fetchClassrooms();
+        fetchSchools();
     }, [page]);
 
     const debounceRef = useRef(null);
@@ -50,21 +63,26 @@ const AdminClassrooms = () => {
         debounceRef.current = setTimeout(() => {
             setPage(1);
             fetchClassrooms();
-        }, 1000);
+        }, 500);
         return () => clearTimeout(debounceRef.current);
     }, [search]);
 
     const openCreateModal = () => {
-        setModalData({ id: null, Name: "", SchoolFK: "", Allocation: "" });
+        setModalData({
+            id: null,
+            Name: "",
+            SchoolFK: "",
+            Allocation: ""
+        });
         setShowModal(true);
     };
 
-    const openEditModal = (classroom) => {
+    const openEditModal = (room) => {
         setModalData({
-            id: classroom.Id,
-            Name: classroom.Name,
-            SchoolFK: classroom.SchoolFK,
-            Allocation: classroom.Allocation
+            id: room.Id,
+            Name: room.Name,
+            SchoolFK: room.SchoolFK,
+            Allocation: room.Allocation
         });
         setShowModal(true);
     };
@@ -83,6 +101,7 @@ const AdminClassrooms = () => {
 
     const handleSave = async () => {
         const { Name, SchoolFK, Allocation } = modalData;
+
         if (!Name || !SchoolFK || !Allocation) {
             alert("Por favor preencha todos os campos obrigatórios.");
             return;
@@ -90,7 +109,7 @@ const AdminClassrooms = () => {
 
         try {
             const payload = {
-                ...modalData,
+                Name, SchoolFK, Allocation,
                 [isEditMode ? "UpdatedBy" : "CreatedBy"]: "admin"
             };
 
@@ -119,7 +138,7 @@ const AdminClassrooms = () => {
 
             <InputGroup className="mb-3">
                 <FormControl
-                    placeholder="Pesquisar por nome ou alocação..."
+                    placeholder="Pesquisar por nome ou localização..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
@@ -133,27 +152,25 @@ const AdminClassrooms = () => {
                         <thead>
                             <tr>
                                 <th>Nome</th>
-                                <th>Alocação</th>
-                                <th>Escola FK</th>
+                                <th>Escola</th>
+                                <th>Localização</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {classrooms.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4" className="text-center text-muted">
-                                        Sem resultados encontrados.
-                                    </td>
+                                    <td colSpan="4" className="text-center text-muted">Sem resultados encontrados.</td>
                                 </tr>
                             ) : (
-                                classrooms.map((c) => (
-                                    <tr key={c.Id}>
-                                        <td>{c.Name}</td>
-                                        <td>{c.Allocation}</td>
-                                        <td>{c.SchoolFK}</td>
+                                classrooms.map((room) => (
+                                    <tr key={room.Id}>
+                                        <td>{room.Name}</td>
+                                        <td>{room.SchoolName || "—"}</td>
+                                        <td>{room.Allocation}</td>
                                         <td>
-                                            <Button variant="outline-primary" size="sm" onClick={() => openEditModal(c)} className="me-2">Editar</Button>
-                                            <Button variant="outline-danger" size="sm" onClick={() => handleDelete(c.Id)}>Apagar</Button>
+                                            <Button variant="outline-primary" size="sm" onClick={() => openEditModal(room)} className="me-2">Editar</Button>
+                                            <Button variant="outline-danger" size="sm" onClick={() => handleDelete(room.Id)}>Apagar</Button>
                                         </td>
                                     </tr>
                                 ))
@@ -165,11 +182,7 @@ const AdminClassrooms = () => {
                         <Pagination className="justify-content-center">
                             <Pagination.Prev disabled={page === 1} onClick={() => setPage(page - 1)} />
                             {Array.from({ length: totalPages }, (_, i) => (
-                                <Pagination.Item
-                                    key={i + 1}
-                                    active={i + 1 === page}
-                                    onClick={() => setPage(i + 1)}
-                                >
+                                <Pagination.Item key={i + 1} active={i + 1 === page} onClick={() => setPage(i + 1)}>
                                     {i + 1}
                                 </Pagination.Item>
                             ))}
@@ -187,27 +200,20 @@ const AdminClassrooms = () => {
                     <Form>
                         <Form.Group className="mb-3">
                             <Form.Label>Nome</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={modalData.Name}
-                                onChange={(e) => setModalData({ ...modalData, Name: e.target.value })}
-                            />
+                            <Form.Control type="text" value={modalData.Name} onChange={(e) => setModalData({ ...modalData, Name: e.target.value })} />
                         </Form.Group>
                         <Form.Group className="mb-3">
-                            <Form.Label>Alocação</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={modalData.Allocation}
-                                onChange={(e) => setModalData({ ...modalData, Allocation: e.target.value })}
-                            />
+                            <Form.Label>Escola</Form.Label>
+                            <Form.Select value={modalData.SchoolFK} onChange={(e) => setModalData({ ...modalData, SchoolFK: e.target.value })}>
+                                <option value="">Seleciona uma escola</option>
+                                {schools.map(s => (
+                                    <option key={s.Id} value={s.Id}>{s.Name}</option>
+                                ))}
+                            </Form.Select>
                         </Form.Group>
                         <Form.Group className="mb-3">
-                            <Form.Label>Escola FK</Form.Label>
-                            <Form.Control
-                                type="number"
-                                value={modalData.SchoolFK}
-                                onChange={(e) => setModalData({ ...modalData, SchoolFK: e.target.value })}
-                            />
+                            <Form.Label>Localização</Form.Label>
+                            <Form.Control type="text" value={modalData.Allocation} onChange={(e) => setModalData({ ...modalData, Allocation: e.target.value })} />
                         </Form.Group>
                     </Form>
                 </Modal.Body>
