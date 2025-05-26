@@ -10,6 +10,7 @@ const API_BASE = import.meta.env.VITE_WS_URL;
 const AdminPeople = () => {
     const token = localStorage.getItem("token");
     const [people, setPeople] = useState([]);
+    const [roles, setRoles] = useState([]);
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -43,8 +44,20 @@ const AdminPeople = () => {
         }
     };
 
+    const fetchRoles = async () => {
+        try {
+            const res = await axios.get(`${API_BASE}/api/admin/roles`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setRoles(res.data);
+        } catch (err) {
+            console.error("Erro ao carregar roles:", err);
+        }
+    };
+
     useEffect(() => {
         fetchPeople();
+        fetchRoles();
     }, [page]);
 
     const debounceRef = useRef(null);
@@ -53,12 +66,20 @@ const AdminPeople = () => {
         debounceRef.current = setTimeout(() => {
             setPage(1);
             fetchPeople();
-        }, 1000);
+        }, 500);
         return () => clearTimeout(debounceRef.current);
     }, [search]);
 
     const openCreateModal = () => {
-        setModalData({ id: null, IdIpt: "", Name: "", Email: "", Title: "", Password: "", Roles: [] });
+        setModalData({
+            id: null,
+            IdIpt: "",
+            Name: "",
+            Email: "",
+            Title: "",
+            Password: "",
+            Roles: []
+        });
         setShowModal(true);
     };
 
@@ -74,13 +95,22 @@ const AdminPeople = () => {
                 Name: fullData.Name,
                 Email: fullData.Email,
                 Title: fullData.Title,
-                Password: "", // nunca mostra a password
+                Password: "", // For security, not pre-filled
                 Roles: fullData.Roles || []
             });
             setShowModal(true);
         } catch (err) {
-            console.error("Erro ao carregar dados do utilizador:", err);
+            console.error("Erro ao carregar utilizador:", err);
         }
+    };
+
+    const handleCheckboxChange = (roleId) => {
+        setModalData(prev => ({
+            ...prev,
+            Roles: prev.Roles.includes(roleId)
+                ? prev.Roles.filter(id => id !== roleId)
+                : [...prev.Roles, roleId]
+        }));
     };
 
     const handleDelete = async (id) => {
@@ -98,8 +128,8 @@ const AdminPeople = () => {
     const handleSave = async () => {
         const { IdIpt, Name, Email, Title, Password, Roles } = modalData;
 
-        if (!IdIpt || !Name || !Email || !Title || (!isEditMode && !Password)) {
-            alert("Preenche todos os campos obrigatórios.");
+        if (!IdIpt || !Name || !Email || !Title || (!isEditMode && !Password) || Roles.length === 0) {
+            alert("Por favor preencha todos os campos obrigatórios e selecione pelo menos um papel.");
             return;
         }
 
@@ -157,9 +187,7 @@ const AdminPeople = () => {
                         <tbody>
                             {people.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="text-center text-muted">
-                                        Sem resultados encontrados.
-                                    </td>
+                                    <td colSpan="5" className="text-center text-muted">Sem resultados encontrados.</td>
                                 </tr>
                             ) : (
                                 people.map((p) => (
@@ -182,11 +210,7 @@ const AdminPeople = () => {
                         <Pagination className="justify-content-center">
                             <Pagination.Prev disabled={page === 1} onClick={() => setPage(page - 1)} />
                             {Array.from({ length: totalPages }, (_, i) => (
-                                <Pagination.Item
-                                    key={i + 1}
-                                    active={i + 1 === page}
-                                    onClick={() => setPage(i + 1)}
-                                >
+                                <Pagination.Item key={i + 1} active={i + 1 === page} onClick={() => setPage(i + 1)}>
                                     {i + 1}
                                 </Pagination.Item>
                             ))}
@@ -204,54 +228,39 @@ const AdminPeople = () => {
                     <Form>
                         <Form.Group className="mb-3">
                             <Form.Label>ID IPT</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={modalData.IdIpt}
-                                onChange={(e) => setModalData({ ...modalData, IdIpt: e.target.value })}
-                            />
+                            <Form.Control type="text" value={modalData.IdIpt} onChange={(e) => setModalData({ ...modalData, IdIpt: e.target.value })} />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Nome</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={modalData.Name}
-                                onChange={(e) => setModalData({ ...modalData, Name: e.target.value })}
-                            />
+                            <Form.Control type="text" value={modalData.Name} onChange={(e) => setModalData({ ...modalData, Name: e.target.value })} />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Email</Form.Label>
-                            <Form.Control
-                                type="email"
-                                value={modalData.Email}
-                                onChange={(e) => setModalData({ ...modalData, Email: e.target.value })}
-                            />
+                            <Form.Control type="email" value={modalData.Email} onChange={(e) => setModalData({ ...modalData, Email: e.target.value })} />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Título</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={modalData.Title}
-                                onChange={(e) => setModalData({ ...modalData, Title: e.target.value })}
-                            />
+                            <Form.Control type="text" value={modalData.Title} onChange={(e) => setModalData({ ...modalData, Title: e.target.value })} />
                         </Form.Group>
+                        {!isEditMode && (
+                            <Form.Group className="mb-3">
+                                <Form.Label>Password</Form.Label>
+                                <Form.Control type="password" value={modalData.Password} onChange={(e) => setModalData({ ...modalData, Password: e.target.value })} />
+                            </Form.Group>
+                        )}
                         <Form.Group className="mb-3">
-                            <Form.Label>Password</Form.Label>
-                            <Form.Control
-                                type="password"
-                                value={modalData.Password}
-                                placeholder={isEditMode ? "••••••••" : ""}
-                                onChange={(e) => setModalData({ ...modalData, Password: e.target.value })}
-                            />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Roles (IDs separados por vírgula)</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={modalData.Roles.join(",")}
-                                onChange={(e) =>
-                                    setModalData({ ...modalData, Roles: e.target.value.split(",").map(Number) })
-                                }
-                            />
+                            <Form.Label>Roles</Form.Label>
+                            <div className="d-flex flex-wrap gap-2">
+                                {roles.map(role => (
+                                    <Form.Check
+                                        key={role.Id}
+                                        type="checkbox"
+                                        label={role.Name}
+                                        checked={modalData.Roles.includes(role.Id)}
+                                        onChange={() => handleCheckboxChange(role.Id)}
+                                    />
+                                ))}
+                            </div>
                         </Form.Group>
                     </Form>
                 </Modal.Body>
