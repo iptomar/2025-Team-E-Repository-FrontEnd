@@ -8,6 +8,7 @@ import AdminDashboard from "./pages/backoffice/AdminDashboard.jsx";
 import AdminSchools from "./pages/backoffice/AdminSchools.jsx";
 import AdminCourses from "./pages/backoffice/AdminCourses.jsx";
 import AdminSubjects from "./pages/backoffice/AdminSubjects.jsx";
+import AdminClassrooms from "./pages/backoffice/AdminClassrooms.jsx";
 
 const router = createBrowserRouter([
     { path: "/", element: <Login /> },
@@ -23,7 +24,8 @@ const router = createBrowserRouter([
                     { path: "backoffice", element: <AdminDashboard />},
                     { path: "backoffice/schools", element: <AdminSchools /> },
                     { path: "backoffice/courses", element: <AdminCourses /> },
-                    { path: "backoffice/subjects", element: <AdminSubjects /> }
+                    { path: "backoffice/subjects", element: <AdminSubjects /> },
+                    { path: "backoffice/classrooms", element: <AdminClassrooms /> }
                 ],
             },
         ],
