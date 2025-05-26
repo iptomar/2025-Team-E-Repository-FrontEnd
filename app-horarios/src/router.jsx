@@ -7,6 +7,7 @@ import CalendarsPage from "./pages/home/gestor/main-calendars-page.jsx";
 import AdminDashboard from "./pages/backoffice/AdminDashboard.jsx";
 import AdminSchools from "./pages/backoffice/AdminSchools.jsx";
 import AdminCourses from "./pages/backoffice/AdminCourses.jsx";
+import AdminSubjects from "./pages/backoffice/AdminSubjects.jsx";
 
 const router = createBrowserRouter([
     { path: "/", element: <Login /> },
@@ -21,7 +22,8 @@ const router = createBrowserRouter([
                     { path: "home", element: <CalendarsPage />},
                     { path: "backoffice", element: <AdminDashboard />},
                     { path: "backoffice/schools", element: <AdminSchools /> },
-                    { path: "backoffice/courses", element: <AdminCourses /> }
+                    { path: "backoffice/courses", element: <AdminCourses /> },
+                    { path: "backoffice/subjects", element: <AdminSubjects /> }
                 ],
             },
         ],
