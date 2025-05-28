@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
-import CalendarTest from "./pages/calendar/calendar-test.jsx";
 import Login from "./pages/auth/login/login.jsx";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
 import CalendarsPage from "./pages/home/gestor/main-calendars-page.jsx";
@@ -12,18 +11,20 @@ import AdminClassrooms from "./pages/backoffice/AdminClassrooms.jsx";
 import AdminPeople from "./pages/backoffice/AdminPeople.jsx";
 import AdminProfSubj from "./pages/backoffice/AdminProfSubj.jsx";
 import AdminCourseSubj from "./pages/backoffice/AdminCourseSubj.jsx";
+import CalendarCreate from "./pages/calendar/create/Create.jsx";
+import { ROUTES } from "./routes.jsx";
 
 const router = createBrowserRouter([
-    { path: "/", element: <Login /> },
+    { path: ROUTES.LOGIN, element: <Login /> },
     {
         path: "/",
         element: <App />,
         children: [
             {
-                element: <ProtectedRoute />, // Protect all children below
+                element: <ProtectedRoute />, 
                 children: [
-                    { path: "calendario", element: <CalendarTest /> },
-                    { path: "home", element: <CalendarsPage />},
+                    { path: ROUTES.CALENDAR_CREATE, element: <CalendarCreate /> },
+                    { path: ROUTES.HOME, element: <CalendarsPage />},
                     { path: "backoffice", element: <AdminDashboard />},
                     { path: "backoffice/schools", element: <AdminSchools /> },
                     { path: "backoffice/courses", element: <AdminCourses /> },
