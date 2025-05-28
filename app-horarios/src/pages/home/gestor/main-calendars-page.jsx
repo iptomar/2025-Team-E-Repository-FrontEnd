@@ -55,7 +55,12 @@ export default function CalendarListing() {
       setCalendars(updatedCalendars);
 
       navigate(FULL_ROUTES.CALENDAR_CREATE, {
-        state: { scheduleId: data.scheduleId }
+        state: { 
+          scheduleId: data.scheduleId ,
+          scheduleName: calendarName,
+          startDate: startDate,
+          endDate: endDate,
+        }
       });
     } catch (error) {
       const message = error?.response?.data?.error || 'Falha ao criar o calendário. Tente novamente.';

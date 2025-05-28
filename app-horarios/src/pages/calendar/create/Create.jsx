@@ -82,7 +82,8 @@ export default function CalendarCreate() {
 
     const location = useLocation();
 
-    const {scheduleId} = location.state;
+    const {scheduleId , scheduleName, startDate, endDate} = location.state;
+
 
      useEffect(() => {
         const loadClassrooms = async () => {
@@ -386,6 +387,12 @@ export default function CalendarCreate() {
             <h2 className="headerText text-center">
                 Plataforma de Gestão de Horários
             </h2>
+            <div className="schedule-info mb-4 p-3 bg-light rounded text-center">
+                <h4 className="mb-1">{scheduleName}</h4>
+                <p className="mb-0">
+                    Período: {(startDate)} a {(endDate)}
+                </p>
+            </div>
 
             {message.text && (
                 <Alert
