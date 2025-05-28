@@ -19,6 +19,7 @@ import {fetchSubjectsWithProfessors} from "../../../api/courseFetcher.js";
 import {createEvent} from "../../../api/calendarFetcher.js";
 import {useNavigate, useLocation} from "react-router-dom";
 import {FULL_ROUTES} from "../../../routes.jsx";
+import {fetchClassrooms} from "../../../api/classroomFetcher.js";
 
 /**
  * CalendarCreate Component
@@ -49,7 +50,6 @@ export default function CalendarCreate() {
             course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             course.professor.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    console.log(filteredCourses);
 
     const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
     const currentCourses = filteredCourses.slice(
@@ -57,12 +57,8 @@ export default function CalendarCreate() {
         indexOfLastItem
     );
 
-    const [rooms] = useState([
-        {id: 1, name: "B257"},
-        {id: 2, name: "B128"},
-        {id: 3, name: "B255"},
-        {id: 4, name: "I184"},
-    ]);
+    const [rooms, setRooms] = useState([]);
+    const [loadingRooms, setLoadingRooms] = useState(true);
 
     // State for calendar events
     const [events, setEvents] = useState([]);
@@ -87,6 +83,36 @@ export default function CalendarCreate() {
     const location = useLocation();
 
     const {scheduleId} = location.state;
+
+     useEffect(() => {
+        const loadClassrooms = async () => {
+            try {
+                const response = await fetchClassrooms();
+                let classroomsData = [];
+                if (Array.isArray(response)) {
+                    classroomsData = response;
+                } else if (response?.data && Array.isArray(response.data)) {
+                    classroomsData = response.data;
+                } else if (response?.classrooms && Array.isArray(response.classrooms)) {
+                    classroomsData = response.classrooms;
+                }
+                
+                // Transform room objects to use lowercase properties
+                const transformedRooms = classroomsData.map(room => ({
+                    id: room.Id,
+                    name: room.Name,
+                }));
+                
+                setRooms(transformedRooms);
+                setLoadingRooms(false);
+            } catch (err) {
+                setLoadingRooms(false);
+                console.error("Failed to load classrooms:", err);
+                setRooms([]); 
+            }
+        };
+        loadClassrooms();
+    }, []);
 
     useEffect(() => {
         const loadCourses = async () => {
@@ -214,6 +240,11 @@ export default function CalendarCreate() {
             return;
         }
 
+        if (!Array.isArray(rooms) || rooms.length === 0) {
+            setMessage({text: "Dados de sala indisponíveis", type: "danger"});
+            return;
+        }
+
         // Check if the selected room is already booked for this time slot
         const eventStart = new Date(selectedEvent.start);
         const eventEnd = new Date(selectedEvent.end);
@@ -241,7 +272,8 @@ export default function CalendarCreate() {
         const selectedCourse = courses.find(
             (c) => c.id === selectedEvent.extendedProps.courseId
         );
-        const roomName = rooms.find((r) => r.id === parseInt(selectedRoom)).name;
+         const room = rooms.find(r => r.id === parseInt(selectedRoom));
+        const roomName = room ? room.name : "Sala desconhecida";
         const professor = selectedCourse.professor;
         setEvents(
             events.map((event) => {
@@ -652,21 +684,24 @@ export default function CalendarCreate() {
                                 })}
                             </p>
 
-                            <Form.Group className="mb-3">
-                                <Form.Label>Sala:</Form.Label>
-                                <Form.Select
-                                    value={selectedRoom}
-                                    onChange={(e) => setSelectedRoom(e.target.value)}
-                                    className="formControl"
-                                >
-                                    <option value="">Selecione uma sala</option>
-                                    {rooms.map((room) => (
+                            <Form.Select
+                                value={selectedRoom}
+                                onChange={(e) => setSelectedRoom(e.target.value)}
+                                className="formControl"
+                            >
+                                <option value="">Selecione uma sala</option>
+                                {loadingRooms ? (
+                                    <option disabled>Carregando salas...</option>
+                                ) : rooms.length === 0 ? (
+                                    <option disabled>Nenhuma sala disponível</option>
+                                ) : (
+                                    rooms.map(room => (
                                         <option key={room.id} value={room.id}>
                                             {room.name}
                                         </option>
-                                    ))}
-                                </Form.Select>
-                            </Form.Group>
+                                    ))
+                                )}
+                            </Form.Select>
                         </>
                     )}
                 </Modal.Body>
