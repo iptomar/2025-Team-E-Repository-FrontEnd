@@ -1,4 +1,6 @@
-﻿/* ===== MAIN LAYOUT ===== */
+﻿@use '../../../styles/variables' as *;
+
+/* ===== MAIN LAYOUT ===== */
 .mainContainer {
   background-color: #ffffff;
   padding: 20px;
@@ -247,6 +249,24 @@
 .hours-badge {
   font-size: 0.7rem !important;
   padding: 2px 6px !important;
+}
+
+/* ===== SCHEDULE INFO ===== */
+.schedule-info {
+    border-left: 4px solid $primary-main-color;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+    h4 {
+        color: $primary-text-color;
+        font-weight: $font-bold;
+        font-family: $font-family;
+    }
+    
+    p {
+        color: $secondary-text-color;
+        font-size: $body-small-size;
+        font-family: $font-family;
+    }
 }
 
 /* ===== RESPONSIVE BREAKPOINTS ===== */

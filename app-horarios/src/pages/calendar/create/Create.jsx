@@ -82,7 +82,8 @@ export default function CalendarCreate() {
 
     const location = useLocation();
 
-    const {scheduleId} = location.state;
+    const {scheduleId , scheduleName, startDate, endDate} = location.state;
+
 
      useEffect(() => {
         const loadClassrooms = async () => {
@@ -145,14 +146,15 @@ export default function CalendarCreate() {
         loadCourses();
     }, []);
 
-    // Check if all courses.jsx have their hours allocated and all events have rooms
+    // Check if the schedule is complete
     useEffect(() => {
+        const hasEvents = events.length > 0;
         const allEventsHaveRooms = events.every(
             (event) => event.extendedProps.room && event.extendedProps.room !== ""
         );
 
-        setScheduleComplete(allEventsHaveRooms);
-    }, [courses, events]);
+        setScheduleComplete(hasEvents && allEventsHaveRooms);
+    }, [events]);
 
     // Handle date selection in calendar
     const handleDateSelect = (selectInfo) => {
@@ -320,6 +322,14 @@ export default function CalendarCreate() {
     };
 
     const saveSchedule = async () => {
+        if (events.length === 0) {
+                setMessage({
+                    text: "O horário está vazio. Adicione aulas antes de guardar.",
+                    type: "warning",
+                });
+                return;
+            }
+
         const eventsWithoutRooms = events.filter(
             (event) => !event.extendedProps.room
         );
@@ -377,6 +387,12 @@ export default function CalendarCreate() {
             <h2 className="headerText text-center">
                 Plataforma de Gestão de Horários
             </h2>
+            <div className="schedule-info mb-4 p-3 bg-light rounded text-center">
+                <h4 className="mb-1">{scheduleName}</h4>
+                <p className="mb-0">
+                    Período: {(startDate)} a {(endDate)}
+                </p>
+            </div>
 
             {message.text && (
                 <Alert
