@@ -1,4 +1,4 @@
-﻿import {useState, useEffect, useRef, Fragment} from "react";
+﻿import { useState, useEffect, useRef, Fragment } from "react";
 import {
     Container,
     Row,
@@ -15,11 +15,11 @@ import interactionPlugin from "@fullcalendar/interaction";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Modal from "react-bootstrap/Modal";
 import "./Create.scss";
-import {fetchSubjectsWithProfessors} from "../../../api/courseFetcher.js";
-import {createEvent} from "../../../api/calendarFetcher.js";
-import {useNavigate, useLocation} from "react-router-dom";
-import {FULL_ROUTES} from "../../../routes.jsx";
-import {fetchClassrooms} from "../../../api/classroomFetcher.js";
+import { fetchSubjectsWithProfessors } from "../../../api/courseFetcher.js";
+import { createEvent } from "../../../api/calendarFetcher.js";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FULL_ROUTES } from "../../../routes.jsx";
+import { fetchClassrooms } from "../../../api/classroomFetcher.js";
 
 /**
  * CalendarCreate Component
@@ -67,7 +67,7 @@ export default function CalendarCreate() {
     const [currentCourse, setCurrentCourse] = useState(null);
 
     // State for validation messages
-    const [message, setMessage] = useState({text: "", type: ""});
+    const [message, setMessage] = useState({ text: "", type: "" });
 
     // State to check if schedule is complete
     const [scheduleComplete, setScheduleComplete] = useState(false);
@@ -82,10 +82,10 @@ export default function CalendarCreate() {
 
     const location = useLocation();
 
-    const {scheduleId , scheduleName, startDate, endDate} = location.state;
+    const { scheduleId, scheduleName, startDate, endDate } = location.state;
 
 
-     useEffect(() => {
+    useEffect(() => {
         const loadClassrooms = async () => {
             try {
                 const response = await fetchClassrooms();
@@ -97,19 +97,19 @@ export default function CalendarCreate() {
                 } else if (response?.classrooms && Array.isArray(response.classrooms)) {
                     classroomsData = response.classrooms;
                 }
-                
+
                 // Transform room objects to use lowercase properties
                 const transformedRooms = classroomsData.map(room => ({
                     id: room.Id,
                     name: room.Name,
                 }));
-                
+
                 setRooms(transformedRooms);
                 setLoadingRooms(false);
             } catch (err) {
                 setLoadingRooms(false);
                 console.error("Failed to load classrooms:", err);
-                setRooms([]); 
+                setRooms([]);
             }
         };
         loadClassrooms();
@@ -188,7 +188,7 @@ export default function CalendarCreate() {
         });
 
         if (hasOverlap) {
-            setMessage({text: "Já existe uma aula neste horário", type: "danger"});
+            setMessage({ text: "Já existe uma aula neste horário", type: "danger" });
             selectInfo.view.calendar.unselect();
             return;
         }
@@ -215,7 +215,7 @@ export default function CalendarCreate() {
         setCourses(
             courses.map((course) =>
                 course.id === currentCourse
-                    ? {...course, allocatedHours: course.allocatedHours + durationHours}
+                    ? { ...course, allocatedHours: course.allocatedHours + durationHours }
                     : course
             )
         );
@@ -238,12 +238,12 @@ export default function CalendarCreate() {
     // Handle room assignment
     const handleRoomAssign = () => {
         if (!selectedRoom) {
-            setMessage({text: "Selecione uma sala para a aula", type: "warning"});
+            setMessage({ text: "Selecione uma sala para a aula", type: "warning" });
             return;
         }
 
         if (!Array.isArray(rooms) || rooms.length === 0) {
-            setMessage({text: "Dados de sala indisponíveis", type: "danger"});
+            setMessage({ text: "Dados de sala indisponíveis", type: "danger" });
             return;
         }
 
@@ -274,7 +274,7 @@ export default function CalendarCreate() {
         const selectedCourse = courses.find(
             (c) => c.id === selectedEvent.extendedProps.courseId
         );
-         const room = rooms.find(r => r.id === parseInt(selectedRoom));
+        const room = rooms.find(r => r.id === parseInt(selectedRoom));
         const roomName = room ? room.name : "Sala desconhecida";
         const professor = selectedCourse.professor;
         setEvents(
@@ -294,7 +294,7 @@ export default function CalendarCreate() {
         );
 
         setShowRoomModal(false);
-        setMessage({text: `Sala atribuída com sucesso!`, type: "success"});
+        setMessage({ text: `Sala atribuída com sucesso!`, type: "success" });
     };
 
     // Handle event removal
@@ -318,17 +318,17 @@ export default function CalendarCreate() {
             events.filter((e) => parseInt(e.id) !== parseInt(selectedEvent.id))
         );
         setShowRoomModal(false);
-        setMessage({text: "Aula removida com sucesso!", type: "info"});
+        setMessage({ text: "Aula removida com sucesso!", type: "info" });
     };
 
     const saveSchedule = async () => {
         if (events.length === 0) {
-                setMessage({
-                    text: "O horário está vazio. Adicione aulas antes de guardar.",
-                    type: "warning",
-                });
-                return;
-            }
+            setMessage({
+                text: "O horário está vazio. Adicione aulas antes de guardar.",
+                type: "warning",
+            });
+            return;
+        }
 
         const eventsWithoutRooms = events.filter(
             (event) => !event.extendedProps.room
@@ -345,18 +345,18 @@ export default function CalendarCreate() {
         //para receber o token
         const token = localStorage.getItem("token");
         //envia toda a informação de quem está a criar este horario
-        const user = localStorage.getItem("user");
+        const user = JSON.parse(localStorage.getItem("user")); // transforma de string para objeto
 
-        // Junta todos as aulas do horário
         const scheduleList = events.map((event) => ({
             subjectId: event.extendedProps.courseId,
             scheduleId: scheduleId,
-            //roomId: event.extendedProps.room,
-            //professor: event.extendedProps.professor || 'Desconhecido',
+            classroomId: event.extendedProps.room,
             startHour: new Date(event.start).toTimeString().slice(0, 8),
             endHour: new Date(event.end).toTimeString().slice(0, 8),
-            createdBy: user,
+            createdBy: user.email,
         }));
+
+
 
         console.log("Horário guardado:", scheduleList);
 
@@ -366,10 +366,10 @@ export default function CalendarCreate() {
                 navigate(FULL_ROUTES.HOME);
             }
 
-            setMessage({text: "Horário guardado com sucesso!", type: "success"});
+            setMessage({ text: "Horário guardado com sucesso!", type: "success" });
             alert("Horário guardado com sucesso!");
         } catch (error) {
-            setMessage({text: error.message, type: "error"});
+            setMessage({ text: error.message, type: "error" });
         }
     };
 
@@ -397,7 +397,7 @@ export default function CalendarCreate() {
             {message.text && (
                 <Alert
                     variant={message.type}
-                    onClose={() => setMessage({text: "", type: ""})}
+                    onClose={() => setMessage({ text: "", type: "" })}
                     dismissible
                 >
                     {message.text}
@@ -447,25 +447,25 @@ export default function CalendarCreate() {
                                             name="course"
                                             label={
                                                 <span>
-                              {course.name}{" "}
+                                                    {course.name}{" "}
                                                     <span className="tipology-badge">
-                                ({course.tipologia === 'Teorico-Pratica' ? 'TP' : course.tipologia === 'Pratica' ? 'P' : 'T'})
-                              </span>
-                              <br/>
-                              <span className="professor-badge">
-                                ({course.professor})
-                              </span>
-                              <Badge
-                                  bg={
-                                      course.allocatedHours >= course.requiredHours
-                                          ? "success"
-                                          : "warning"
-                                  }
-                                  className="ms-2"
-                              >
-                                {course.allocatedHours}/{course.requiredHours}h
-                              </Badge>
-                            </span>
+                                                        ({course.tipologia === 'Teorico-Pratica' ? 'TP' : course.tipologia === 'Pratica' ? 'P' : 'T'})
+                                                    </span>
+                                                    <br />
+                                                    <span className="professor-badge">
+                                                        ({course.professor})
+                                                    </span>
+                                                    <Badge
+                                                        bg={
+                                                            course.allocatedHours >= course.requiredHours
+                                                                ? "success"
+                                                                : "warning"
+                                                        }
+                                                        className="ms-2"
+                                                    >
+                                                        {course.allocatedHours}/{course.requiredHours}h
+                                                    </Badge>
+                                                </span>
                                             }
                                             onChange={() => setCurrentCourse(course.id)}
                                             checked={currentCourse === course.id}
@@ -515,8 +515,8 @@ export default function CalendarCreate() {
 
                                         {/* Current page indicator */}
                                         <span className="pagination-info">
-                        Pg. {currentPage} de {totalPages}
-                    </span>
+                                            Pg. {currentPage} de {totalPages}
+                                        </span>
 
                                         {/* Page 3 (if exists) */}
                                         {totalPages >= 3 && (
@@ -580,8 +580,8 @@ export default function CalendarCreate() {
                                 plugins={[timeGridPlugin, interactionPlugin]}
                                 initialView="timeGridWeek"
                                 headerToolbar={false}
-                                titleFormat={{weekday: "long"}}
-                                dayHeaderFormat={{weekday: "short"}}
+                                titleFormat={{ weekday: "long" }}
+                                dayHeaderFormat={{ weekday: "short" }}
                                 slotDuration="00:30:00"
                                 slotMinTime="08:30:00"
                                 slotMaxTime="23:30:00"
