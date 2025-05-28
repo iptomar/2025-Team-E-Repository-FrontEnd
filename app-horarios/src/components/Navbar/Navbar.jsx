@@ -10,7 +10,7 @@ const Navbar = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const user = JSON.parse(localStorage.getItem("user")) || [];
+    const user = JSON.parse(localStorage.getItem("user")) || {};
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -28,6 +28,10 @@ const Navbar = () => {
         }
     };
 
+    const goToBackoffice = () => {
+        navigate("/backoffice");
+    };
+
     if (isAuthenticated) {
         return (
             <nav className="navbar">
@@ -43,7 +47,17 @@ const Navbar = () => {
                 <div className="navbar-right">
                     {user && user.email && (
                         <>
-                            <span className="navbar-email">{user.email}</span>
+                            {user.role === "Admin" ? (
+                                <span
+                                    className="navbar-email navbar-email--link"
+                                    onClick={goToBackoffice}
+                                    style={{ cursor: "pointer", textDecoration: "underline" }}
+                                >
+                                    {user.email}
+                                </span>
+                            ) : (
+                                <span className="navbar-email">{user.email}</span>
+                            )}
                             <button className="navbar-logout" onClick={handleLogout}>Logout</button>
                         </>
                     )}
