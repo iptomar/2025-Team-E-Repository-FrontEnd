@@ -1,4 +1,4 @@
-﻿import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
 import CalendarTest from "./pages/calendar/calendar-test.jsx";
 import Login from "./pages/auth/login/login.jsx";

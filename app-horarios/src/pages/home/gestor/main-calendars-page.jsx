@@ -3,8 +3,9 @@ import { Button, Card, Container, ListGroup, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import CreateCalendarModal from '../../../components/Calendar/CreateCalendarModal'; 
 import { createSchedule, fetchUserSchedules } from '../../../api/calendarFetcher';
+import {FULL_ROUTES} from "../../../routes.jsx";
 
-export default function CalendarsPage() {
+export default function CalendarListing() {
   const navigate = useNavigate();
   const [calendars, setCalendars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +47,7 @@ export default function CalendarsPage() {
       const updatedCalendars = await fetchUserSchedules(token);
       setCalendars(updatedCalendars);
 
-      navigate('/calendario', {
+      navigate(FULL_ROUTES.CALENDAR_LISTING, {
         state: { scheduleId: data.scheduleId }
       });
     } catch (error) {
