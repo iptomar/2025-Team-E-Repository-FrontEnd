@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, Container, ListGroup, Spinner } from 'react-bootstrap';
+import { Button, Card, Container, ListGroup, Spinner, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import CreateCalendarModal from '../../../components/Calendar/CreateCalendarModal'; 
+import CreateCalendarModal from '../../../components/Calendar/CreateCalendarModal';
 import { createSchedule, fetchUserSchedules } from '../../../api/calendarFetcher';
-import {FULL_ROUTES} from "../../../routes.jsx";
+import { FULL_ROUTES } from "../../../routes.jsx";
 
 export default function CalendarListing() {
   const navigate = useNavigate();
@@ -11,9 +11,12 @@ export default function CalendarListing() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [createError, setCreateError] = useState(null);
 
-  // Add missing modal handlers
-  const handleOpenModal = () => setShowModal(true);
+  const handleOpenModal = () => {
+    setCreateError(null); // Limpa erros anteriores ao abrir modal
+    setShowModal(true);
+  };
   const handleCloseModal = () => setShowModal(false);
 
   useEffect(() => {
@@ -29,32 +32,34 @@ export default function CalendarListing() {
         setLoading(false);
       }
     };
-    
+
     loadCalendars();
   }, []);
 
   const handleCreateCalendar = async ({ courseId, calendarName, startDate, endDate }) => {
+    if (new Date(endDate) < new Date(startDate)) {
+      setCreateError('A data de fim não pode ser anterior à data de início.');
+      return;
+    }
+
     try {
-      const data = await createSchedule({ 
-        courseId, 
-        name: calendarName, 
-        startDate, 
-        endDate 
+      const data = await createSchedule({
+        courseId,
+        name: calendarName,
+        startDate,
+        endDate
       });
 
-      // Refresh calendar list after creation
       const token = localStorage.getItem('token');
       const updatedCalendars = await fetchUserSchedules(token);
       setCalendars(updatedCalendars);
 
       navigate(FULL_ROUTES.CALENDAR_CREATE, {
-        state: {
-          scheduleId: data.scheduleId
-        }
+        state: { scheduleId: data.scheduleId }
       });
     } catch (error) {
-      console.error(error);
-      alert('Falha ao criar o calendário. Tente novamente.');
+      const message = error?.response?.data?.error || 'Falha ao criar o calendário. Tente novamente.';
+      setCreateError(message);
     }
   };
 
@@ -67,6 +72,12 @@ export default function CalendarListing() {
           </Button>
         </Card.Body>
       </Card>
+
+      {createError && (
+        <Alert variant="danger" onClose={() => setCreateError(null)} dismissible>
+          {createError}
+        </Alert>
+      )}
 
       <Card>
         <Card.Header>Meus Horários</Card.Header>
@@ -83,9 +94,9 @@ export default function CalendarListing() {
             <ListGroup.Item>Nenhum horário encontrado.</ListGroup.Item>
           ) : (
             calendars.map(cal => (
-              <ListGroup.Item 
+              <ListGroup.Item
                 key={cal.Id}
-                action 
+                action
                 className="d-flex justify-content-between align-items-center"
               >
                 <div>
