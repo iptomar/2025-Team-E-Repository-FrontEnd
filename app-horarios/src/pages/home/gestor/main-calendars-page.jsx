@@ -47,8 +47,10 @@ export default function CalendarListing() {
       const updatedCalendars = await fetchUserSchedules(token);
       setCalendars(updatedCalendars);
 
-      navigate(FULL_ROUTES.CALENDAR_LISTING, {
-        state: { scheduleId: data.scheduleId }
+      navigate(FULL_ROUTES.CALENDAR_CREATE, {
+        state: {
+          scheduleId: data.scheduleId
+        }
       });
     } catch (error) {
       console.error(error);

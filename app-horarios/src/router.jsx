@@ -12,7 +12,7 @@ import AdminPeople from "./pages/backoffice/AdminPeople.jsx";
 import AdminProfSubj from "./pages/backoffice/AdminProfSubj.jsx";
 import AdminCourseSubj from "./pages/backoffice/AdminCourseSubj.jsx";
 import CalendarCreate from "./pages/calendar/create/Create.jsx";
-import { ROUTES } from "./routes.jsx";
+import { FULL_ROUTES, ROUTES } from "./routes.jsx";
 
 const router = createBrowserRouter([
     { path: ROUTES.LOGIN, element: <Login /> },
@@ -23,7 +23,7 @@ const router = createBrowserRouter([
             {
                 element: <ProtectedRoute />, 
                 children: [
-                    { path: ROUTES.CALENDAR_CREATE, element: <CalendarCreate /> },
+                    { path: FULL_ROUTES.CALENDAR_CREATE, element: <CalendarCreate /> },
                     { path: ROUTES.HOME, element: <CalendarsPage />},
                     { path: "backoffice", element: <AdminDashboard />},
                     { path: "backoffice/schools", element: <AdminSchools /> },
