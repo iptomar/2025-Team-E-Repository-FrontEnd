@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card } from "react-bootstrap";
+import {FULL_ROUTES} from "../../routes.jsx";
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -8,7 +9,7 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         if (!user || user.role !== "Admin") {
-            navigate("/");
+            navigate(FULL_ROUTES.LOGIN);
         }
     }, [navigate]);
 

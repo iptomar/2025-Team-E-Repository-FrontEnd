@@ -127,14 +127,14 @@ const CalendarView = () => {
                             <Button
                                 variant="outline-secondary"
                                 className="me-2"
-                                onClick={() => navigate('/schedules')}
+                                onClick={() => navigate()}
                             >
                                 Voltar
                             </Button>
                             <Button
                                 variant="primary"
                                 className="button"
-                                onClick={() => navigate(`/schedules/${scheduleId}/edit`)}
+                                onClick={() => navigate()}
                             >
                                 Editar
                             </Button>

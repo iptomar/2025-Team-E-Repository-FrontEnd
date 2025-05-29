@@ -29,7 +29,7 @@ const Navbar = () => {
     };
 
     const goToBackoffice = () => {
-        navigate("/backoffice");
+        navigate(FULL_ROUTES.BACKOFFICE.HOME);
     };
 
     if (isAuthenticated) {

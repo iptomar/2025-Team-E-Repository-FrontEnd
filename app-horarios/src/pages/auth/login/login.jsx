@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import '../../../styles/main.scss';
 import {useNavigate} from 'react-router-dom'
 import {login} from '../../../api/authFetcher.js';
+import {FULL_ROUTES} from "../../../routes.jsx";
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -17,7 +18,7 @@ const Login = () => {
       localStorage.setItem('token', data.token); // guarda o token
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      navigate('/home');
+      navigate(FULL_ROUTES.HOME);
     } catch (err) {
       console.log(err.message);
       setErrorMessage(err.message);

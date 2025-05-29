@@ -12,7 +12,8 @@ import AdminPeople from "./pages/backoffice/AdminPeople.jsx";
 import AdminProfSubj from "./pages/backoffice/AdminProfSubj.jsx";
 import AdminCourseSubj from "./pages/backoffice/AdminCourseSubj.jsx";
 import CalendarCreate from "./pages/calendar/create/Create.jsx";
-import { FULL_ROUTES, ROUTES } from "./routes.jsx";
+import CalendarView from "./pages/calendar/view/View.jsx";
+import { ROUTES } from "./routes.jsx";
 
 const router = createBrowserRouter([
     { path: ROUTES.LOGIN, element: <Login /> },
@@ -21,18 +22,38 @@ const router = createBrowserRouter([
         element: <App />,
         children: [
             {
-                element: <ProtectedRoute />, 
+                element: <ProtectedRoute />,
                 children: [
-                    { path: FULL_ROUTES.CALENDAR_CREATE, element: <CalendarCreate /> },
-                    { path: ROUTES.HOME, element: <CalendarsPage />},
-                    { path: "backoffice", element: <AdminDashboard />},
-                    { path: "backoffice/schools", element: <AdminSchools /> },
-                    { path: "backoffice/courses", element: <AdminCourses /> },
-                    { path: "backoffice/subjects", element: <AdminSubjects /> },
-                    { path: "backoffice/classrooms", element: <AdminClassrooms /> },
-                    { path: "backoffice/people", element: <AdminPeople /> },
-                    { path: "backoffice/profsubj", element: <AdminProfSubj /> },
-                    { path: "backoffice/coursesubj", element: <AdminCourseSubj /> }
+                    { path: ROUTES.HOME, element: <CalendarsPage /> },
+                    {
+                        path: ROUTES.CALENDAR_ROOT,
+                        children: [
+                            {
+                                children: [
+                                    { path: ROUTES.CALENDAR_LISTING, element: <CalendarsPage /> },
+                                    { path: ROUTES.CALENDAR_CREATE, element: <CalendarCreate /> },
+                                    { path: ROUTES.CALENDAR_VIEW, element: <CalendarView /> },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        path: ROUTES.BACKOFFICE_ROOT,
+                        children: [
+                            {
+                                children: [
+                                    { path: ROUTES.BACKOFFICE_DASHBOARD, element: <AdminDashboard /> },
+                                    { path: ROUTES.BACKOFFICE_SCHOOLS, element: <AdminSchools /> },
+                                    { path: ROUTES.BACKOFFICE_COURSES, element: <AdminCourses /> },
+                                    { path: ROUTES.BACKOFFICE_SUBJECTS, element: <AdminSubjects /> },
+                                    { path: ROUTES.BACKOFFICE_CLASSROOMS, element: <AdminClassrooms /> },
+                                    { path: ROUTES.BACKOFFICE_PEOPLE, element: <AdminPeople /> },
+                                    { path: ROUTES.BACKOFFICE_PROFSUBJ, element: <AdminProfSubj /> },
+                                    { path: ROUTES.BACKOFFICE_COURSESUBJ, element: <AdminCourseSubj /> },
+                                ],
+                            },
+                        ],
+                    },
                 ],
             },
         ],

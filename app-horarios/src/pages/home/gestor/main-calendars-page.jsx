@@ -54,7 +54,7 @@ export default function CalendarListing() {
       const updatedCalendars = await fetchUserSchedules(token);
       setCalendars(updatedCalendars);
 
-      navigate(FULL_ROUTES.CALENDAR_CREATE, {
+      navigate(FULL_ROUTES.CALENDAR.CREATE, {
         state: { 
           scheduleId: data.scheduleId ,
           scheduleName: calendarName,
