@@ -1,34 +1,101 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Badge, Button, Form, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Spinner } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import { fetchScheduleById } from '../../../api/calendarFetcher';
+import { fetchClassrooms } from '../../../api/classroomFetcher';
+import { fetchSubjectsWithProfessors } from '../../../api/courseFetcher';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './View.scss';
 
 const CalendarView = () => {
     const { scheduleId } = useParams();
     const navigate = useNavigate();
 
-    // State management
     const [schedule, setSchedule] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedView, setSelectedView] = useState('week'); // week, month, list
+    const [events, setEvents] = useState([]);
 
-    // Fetch schedule data
     useEffect(() => {
-        const fetchSchedule = async () => {
+        const getWeekStart = (date) => {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        };
+
+        const getColorByTipologia = (tipologia) => {
+            switch (tipologia) {
+                case 'Teorico': return '#b25d31';
+                case 'Pratica': return '#5d9b42';
+                case 'Teorico-Pratica': return '#4285f4';
+                default: return '#aa46bb';
+            }
+        };
+
+        const transformBlocksToEvents = (blocks, classrooms, subjects) => {
+            if (!blocks) return [];
+
+            const weekStart = getWeekStart(new Date());
+
+            return blocks.map(block => {
+                const subject = subjects.find(s => s.Id === block.SubjectFK);
+                const classroom = classrooms.find(c => c.Id === block.ClassroomFK);
+
+                const dayOfWeek = block.DayOfWeek || 1;
+                const eventDate = new Date(weekStart);
+                eventDate.setDate(weekStart.getDate() + (dayOfWeek - 1));
+
+                const [startHour, startMinute] = block.StartHour.split(':');
+                const [endHour, endMinute] = block.EndHour.split(':');
+
+                const start = new Date(eventDate);
+                start.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
+
+                const end = new Date(eventDate);
+                end.setHours(parseInt(endHour), parseInt(endMinute), 0, 0);
+
+                return {
+                    id: block.Id,
+                    title: `${block.SubjectName} - ${block.ClassroomName || 'Sem sala'} - ${subject?.Professor || 'N/A'}`,
+                    start: start,
+                    end: end,
+                    allDay: false,
+                    extendedProps: {
+                        professor: subject?.Professor || 'N/A',
+                        classroom: block.ClassroomName || classroom?.Name || `Sala ${block.ClassroomFK}`,
+                        tipologia: subject?.Tipologia || 'N/A',
+                        dayOfWeek: dayOfWeek
+                    },
+                    backgroundColor: getColorByTipologia(subject?.Tipologia),
+                    borderColor: getColorByTipologia(subject?.Tipologia)
+                };
+            });
+        };
+
+        const fetchAllData = async () => {
             try {
                 setLoading(true);
-                const response = await fetch(`${import.meta.env.VITE_WS_URL}/api/schedules/${scheduleId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
+                const token = localStorage.getItem('token');
+                const [scheduleData, classroomsData, subjectsData] = await Promise.all([
+                    fetchScheduleById(scheduleId, token),
+                    fetchClassrooms(),
+                    fetchSubjectsWithProfessors()
+                ]);
+                setSchedule(scheduleData);
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch schedule');
+                if (scheduleData?.blocks) {
+                    const calendarEvents = transformBlocksToEvents(
+                        scheduleData.blocks,
+                        classroomsData,
+                        subjectsData
+                    );
+                    setEvents(calendarEvents);
                 }
-
-                const data = await response.json();
-                setSchedule(data);
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -36,45 +103,47 @@ const CalendarView = () => {
             }
         };
 
-        if (scheduleId) {
-            fetchSchedule();
-        }
+        fetchAllData();
     }, [scheduleId]);
 
-    // Helper function to format time
-    const formatTime = (timeString) => {
-        return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('pt-PT', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+    function renderEventContent(eventInfo) {
+        return (
+            <>
+                <b>{eventInfo.timeText}</b>
+                <i>{eventInfo.event.title}</i>
+            </>
+        );
+    }
+
+    const handleEventClick = (clickInfo) => {
+        const event = clickInfo.event;
+        alert(`
+      Disciplina: ${event.title}
+      Professor: ${event.extendedProps.professor}
+      Horário: ${event.start.toLocaleTimeString('pt-PT')} - ${event.end.toLocaleTimeString('pt-PT')}
+      Sala: ${event.extendedProps.classroom}
+      Tipo: ${event.extendedProps.tipologia}
+    `);
     };
 
-    // Helper function to get day name
-    const getDayName = (dayNumber) => {
-        const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-        return days[dayNumber];
-    };
+    const calculateStats = () => ({
+        totalClasses: schedule?.blocks?.length || 0,
+        uniqueSubjects: new Set(schedule?.blocks?.map(b => b.SubjectName)).size || 0,
+        totalHours: schedule?.blocks?.reduce((sum, block) => {
+            const start = new Date(`2000-01-01T${block.StartHour}`);
+            const end = new Date(`2000-01-01T${block.EndHour}`);
+            return sum + (end - start) / (1000 * 60 * 60);
+        }, 0).toFixed(1) || 0
+    });
 
-    // Group schedule items by day
-    const groupByDay = (items) => {
-        return items.reduce((groups, item) => {
-            const day = item.dayOfWeek;
-            if (!groups[day]) {
-                groups[day] = [];
-            }
-            groups[day].push(item);
-            return groups;
-        }, {});
-    };
+    const stats = calculateStats();
 
     if (loading) {
         return (
-            <Container className="mainContainer">
+            <Container fluid className="mainContainer d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
                 <div className="text-center">
-                    <Spinner animation="border" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                    </Spinner>
-                    <p className="mt-2">Carregando horário...</p>
+                    <Spinner animation="border" />
+                    <div className="mt-2">Carregando horário...</div>
                 </div>
             </Container>
         );
@@ -82,243 +151,110 @@ const CalendarView = () => {
 
     if (error) {
         return (
-            <Container className="mainContainer">
-                <Alert variant="danger">
+            <Container fluid className="mainContainer">
+                <Alert variant="danger" className="mt-4">
                     <Alert.Heading>Erro ao carregar horário</Alert.Heading>
                     <p>{error}</p>
-                    <Button variant="outline-danger" onClick={() => navigate('/schedules')}>
+                    <Button variant="outline-danger" onClick={() => navigate('/calendar')}>
                         Voltar aos Horários
                     </Button>
                 </Alert>
             </Container>
         );
     }
-
-    if (!schedule) {
-        return (
-            <Container className="mainContainer">
-                <Alert variant="warning">
-                    <Alert.Heading>Horário não encontrado</Alert.Heading>
-                    <p>O horário solicitado não foi encontrado.</p>
-                    <Button variant="outline-warning" onClick={() => navigate('/schedules')}>
-                        Voltar aos Horários
-                    </Button>
-                </Alert>
-            </Container>
-        );
-    }
-
-    const groupedSchedule = groupByDay(schedule.items || []);
 
     return (
-        <Container className="mainContainer">
-            {/* Header */}
-            <Row className="mb-4">
-                <Col>
-                    <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 className="headerText">Visualizar Horário</h2>
-                            <h4>{schedule.name}</h4>
-                            <p className="text-muted">
-                                Criado em: {new Date(schedule.createdAt).toLocaleDateString('pt-PT')}
-                            </p>
-                        </div>
-                        <div>
-                            <Button
-                                variant="outline-secondary"
-                                className="me-2"
-                                onClick={() => navigate()}
-                            >
-                                Voltar
-                            </Button>
-                            <Button
-                                variant="primary"
-                                className="button"
-                                onClick={() => navigate()}
-                            >
-                                Editar
-                            </Button>
-                        </div>
-                    </div>
-                </Col>
-            </Row>
+        <Container fluid className="mainContainer">
+            <h2 className="headerText text-center">
+                Visualização de Horário
+            </h2>
 
-            {/* View Controls */}
-            <Row className="mb-3">
-                <Col>
-                    <Card className="card">
+            <div className="schedule-info mb-4 p-3 bg-light rounded text-center">
+                <h4 className="mb-1">{schedule?.Name}</h4>
+                <p className="mb-0">
+                    Horário Semanal - Visualização
+                </p>
+            </div>
+
+            <Row>
+                <Col md={3}>
+                    <Card className="mb-4 card">
+                        <Card.Header className="cardHeader">Controles de Visualização</Card.Header>
                         <Card.Body>
-                            <Form.Group>
-                                <Form.Label>Visualização:</Form.Label>
-                                <div className="d-flex gap-2">
-                                    <Form.Check
-                                        type="radio"
-                                        id="view-week"
-                                        name="view"
-                                        label="Semanal"
-                                        checked={selectedView === 'week'}
-                                        onChange={() => setSelectedView('week')}
-                                    />
-                                    <Form.Check
-                                        type="radio"
-                                        id="view-list"
-                                        name="view"
-                                        label="Lista"
-                                        checked={selectedView === 'list'}
-                                        onChange={() => setSelectedView('list')}
-                                    />
-                                </div>
-                            </Form.Group>
+                            <div className="d-grid gap-2">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => navigate('/calendar')}
+                                >
+                                    ← Voltar aos Horários
+                                </Button>
+                                <Button
+                                    className="button"
+                                    onClick={() => navigate(`/calendar/create`, {
+                                        state: {
+                                            scheduleId: scheduleId,
+                                            scheduleName: schedule?.Name
+                                        }
+                                    })}
+                                >
+                                    ✏️ Editar Horário
+                                </Button>
+                            </div>
+                        </Card.Body>
+                    </Card>
+
+                    <Card className="mb-4 card">
+                        <Card.Header className="cardHeader">Estatísticas do Horário</Card.Header>
+                        <Card.Body>
+                            <div className="text-center mb-3">
+                                <h4 className="text-primary mb-1">{stats.totalClasses}</h4>
+                                <small className="text-muted">Aulas Totais</small>
+                            </div>
+                            <div className="text-center mb-3">
+                                <h4 className="text-success mb-1">{stats.uniqueSubjects}</h4>
+                                <small className="text-muted">Disciplinas</small>
+                            </div>
+                            <div className="text-center">
+                                <h4 className="text-warning mb-1">{stats.totalHours}h</h4>
+                                <small className="text-muted">Horas Semanais</small>
+                            </div>
                         </Card.Body>
                     </Card>
                 </Col>
-            </Row>
 
-            {/* Schedule Content */}
-            {selectedView === 'week' ? (
-                /* Week View */
-                <Row>
-                    {[1, 2, 3, 4, 5].map(day => (
-                        <Col key={day} lg={2} md={4} sm={6} className="mb-3">
-                            <Card className="card h-100">
-                                <Card.Header className="cardHeader text-center">
-                                    {getDayName(day)}
-                                </Card.Header>
-                                <Card.Body className="p-2">
-                                    {groupedSchedule[day] ? (
-                                        groupedSchedule[day]
-                                            .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                                            .map((item, index) => (
-                                                <div key={index} className="mb-2 p-2 border rounded">
-                                                    <div className="d-flex justify-content-between align-items-start">
-                                                        <div className="flex-grow-1">
-                                                            <strong className="d-block">{item.subject}</strong>
-                                                            <small className="text-muted d-block">
-                                                                {item.professor}
-                                                            </small>
-                                                            <small className="text-muted">
-                                                                {formatTime(item.startTime)} - {formatTime(item.endTime)}
-                                                            </small>
-                                                        </div>
-                                                        <Badge
-                                                            bg={item.tipologia === 'Teorico-Pratica' ? 'warning' :
-                                                                item.tipologia === 'Pratica' ? 'success' : 'info'}
-                                                            className="ms-1"
-                                                        >
-                                                            {item.tipologia === 'Teorico-Pratica' ? 'TP' :
-                                                                item.tipologia === 'Pratica' ? 'P' : 'T'}
-                                                        </Badge>
-                                                    </div>
-                                                    {item.room && (
-                                                        <small className="text-muted d-block mt-1">
-                                                            Sala: {item.room}
-                                                        </small>
-                                                    )}
-                                                </div>
-                                            ))
-                                    ) : (
-                                        <p className="text-muted text-center small">Sem aulas</p>
-                                    )}
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    ))}
-                </Row>
-            ) : (
-                /* List View */
-                <Row>
-                    <Col>
-                        <Card className="card">
-                            <Card.Header className="cardHeader">
-                                Lista de Aulas
-                            </Card.Header>
-                            <Card.Body>
-                                {Object.entries(groupedSchedule)
-                                    .sort(([a], [b]) => parseInt(a) - parseInt(b))
-                                    .map(([day, items]) => (
-                                        <div key={day} className="mb-4">
-                                            <h5 className="border-bottom pb-2">{getDayName(parseInt(day))}</h5>
-                                            {items
-                                                .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                                                .map((item, index) => (
-                                                    <div key={index} className="d-flex justify-content-between align-items-center p-3 border rounded mb-2">
-                                                        <div>
-                                                            <strong>{item.subject}</strong>
-                                                            <div className="text-muted">
-                                                                {item.professor}
-                                                            </div>
-                                                            <small className="text-muted">
-                                                                {formatTime(item.startTime)} - {formatTime(item.endTime)}
-                                                                {item.room && ` • Sala: ${item.room}`}
-                                                            </small>
-                                                        </div>
-                                                        <Badge
-                                                            bg={item.tipologia === 'Teorico-Pratica' ? 'warning' :
-                                                                item.tipologia === 'Pratica' ? 'success' : 'info'}
-                                                        >
-                                                            {item.tipologia === 'Teorico-Pratica' ? 'TP' :
-                                                                item.tipologia === 'Pratica' ? 'P' : 'T'}
-                                                        </Badge>
-                                                    </div>
-                                                ))
-                                            }
-                                        </div>
-                                    ))
-                                }
-
-                                {Object.keys(groupedSchedule).length === 0 && (
-                                    <div className="text-center text-muted py-4">
-                                        <p>Este horário não possui aulas agendadas.</p>
-                                    </div>
-                                )}
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                </Row>
-            )}
-
-            {/* Schedule Statistics */}
-            <Row className="mt-4">
-                <Col>
+                <Col md={9}>
                     <Card className="card">
-                        <Card.Header className="cardHeader">
-                            Estatísticas do Horário
-                        </Card.Header>
                         <Card.Body>
-                            <Row>
-                                <Col md={3}>
-                                    <div className="text-center">
-                                        <h4>{schedule.items?.length || 0}</h4>
-                                        <small className="text-muted">Total de Aulas</small>
-                                    </div>
-                                </Col>
-                                <Col md={3}>
-                                    <div className="text-center">
-                                        <h4>{Object.keys(groupedSchedule).length}</h4>
-                                        <small className="text-muted">Dias com Aulas</small>
-                                    </div>
-                                </Col>
-                                <Col md={3}>
-                                    <div className="text-center">
-                                        <h4>
-                                            {schedule.items?.reduce((total, item) => {
-                                                const start = new Date(`2000-01-01T${item.startTime}`);
-                                                const end = new Date(`2000-01-01T${item.endTime}`);
-                                                return total + (end - start) / (1000 * 60 * 60);
-                                            }, 0).toFixed(1) || 0}h
-                                        </h4>
-                                        <small className="text-muted">Horas Semanais</small>
-                                    </div>
-                                </Col>
-                                <Col md={3}>
-                                    <div className="text-center">
-                                        <h4>
-                                            {new Set(schedule.items?.map(item => item.subject)).size || 0}
-                                        </h4>
-                                        <small className="text-muted">Disciplinas</small>
-                                    </div>
-                                </Col>
-                            </Row>
+                            <FullCalendar
+                                plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                                initialView="timeGridWeek"
+                                headerToolbar={false}
+                                titleFormat={{ weekday: "long" }}
+                                dayHeaderFormat={{ weekday: "short" }}
+                                slotDuration="00:30:00"
+                                slotMinTime="08:30:00"
+                                slotMaxTime="23:30:00"
+                                allDaySlot={false}
+                                weekends={true}
+                                hiddenDays={[0]}
+                                dayMaxEvents={true}
+                                events={events}
+                                eventContent={renderEventContent}
+                                eventClick={handleEventClick}
+                                height="auto"
+                                locale="pt"
+                                firstDay={1}
+                                slotLabelFormat={{
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: false,
+                                }}
+                                eventTimeFormat={{
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: false,
+                                }}
+                            />
                         </Card.Body>
                     </Card>
                 </Col>

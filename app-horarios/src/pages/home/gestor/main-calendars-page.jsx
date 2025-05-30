@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, Container, ListGroup, Spinner, Alert } from 'react-bootstrap';
+import { Button, Container, ListGroup, Spinner, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import CreateCalendarModal from '../../../components/Calendar/CreateCalendarModal';
 import { createSchedule, fetchUserSchedules } from '../../../api/calendarFetcher';
-import { FULL_ROUTES } from "../../../routes.jsx";
+import {FULL_ROUTES} from "../../../routes.jsx";
 
 export default function CalendarListing() {
   const navigate = useNavigate();
@@ -14,10 +14,16 @@ export default function CalendarListing() {
   const [createError, setCreateError] = useState(null);
 
   const handleOpenModal = () => {
-    setCreateError(null); // Limpa erros anteriores ao abrir modal
+    setCreateError(null);
     setShowModal(true);
   };
+
   const handleCloseModal = () => setShowModal(false);
+
+  // Add this function to handle schedule viewing
+  const handleViewSchedule = (scheduleId) => {
+    navigate(`/calendar/${scheduleId}/view`);
+  };
 
   useEffect(() => {
     const loadCalendars = async () => {
@@ -55,8 +61,8 @@ export default function CalendarListing() {
       setCalendars(updatedCalendars);
 
       navigate(FULL_ROUTES.CALENDAR.CREATE, {
-        state: { 
-          scheduleId: data.scheduleId ,
+        state: {
+          scheduleId: data.scheduleId,
           scheduleName: calendarName,
           startDate: startDate,
           endDate: endDate,
@@ -69,63 +75,73 @@ export default function CalendarListing() {
   };
 
   return (
-    <Container className="mt-4">
-      <Card className="mt-4 mb-4">
-        <Card.Body>
+      <Container>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h2>Meus Horários</h2>
           <Button variant="primary" onClick={handleOpenModal}>
             Criar novo horário
           </Button>
-        </Card.Body>
-      </Card>
+        </div>
 
-      {createError && (
-        <Alert variant="danger" onClose={() => setCreateError(null)} dismissible>
-          {createError}
-        </Alert>
-      )}
+        {createError && (
+            <Alert variant="danger" onClose={() => setCreateError(null)} dismissible>
+              {createError}
+            </Alert>
+        )}
 
-      <Card>
-        <Card.Header>Meus Horários</Card.Header>
-        <ListGroup variant="flush">
-          {loading ? (
-            <ListGroup.Item className="text-center">
+        <CreateCalendarModal
+            show={showModal}
+            onHide={handleCloseModal}
+            onSubmit={handleCreateCalendar}
+        />
+
+        {loading ? (
+            <div className="text-center">
               <Spinner animation="border" />
-            </ListGroup.Item>
-          ) : error ? (
-            <ListGroup.Item className="text-danger">
+            </div>
+        ) : error ? (
+            <Alert variant="danger">
               Erro ao carregar horários: {error}
-            </ListGroup.Item>
-          ) : calendars.length === 0 ? (
-            <ListGroup.Item>Nenhum horário encontrado.</ListGroup.Item>
-          ) : (
-            calendars.map(cal => (
-              <ListGroup.Item
-                key={cal.Id}
-                action
-                className="d-flex justify-content-between align-items-center"
-              >
-                <div>
-                  <strong>{cal.Name}</strong>
-                  {cal.CourseName && (
-                    <span className="ms-2 text-muted">({cal.CourseName})</span>
-                  )}
-                </div>
-                <div>
-                  <small className="text-muted">
-                    Criado em: {new Date(cal.CreatedOn).toLocaleDateString('pt-PT')}
-                  </small>
-                </div>
-              </ListGroup.Item>
-            ))
-          )}
-        </ListGroup>
-      </Card>
-
-      <CreateCalendarModal
-        show={showModal}
-        handleClose={handleCloseModal}
-        onSubmit={handleCreateCalendar}
-      />
-    </Container>
+            </Alert>
+        ) : calendars.length === 0 ? (
+            <Alert variant="info">
+              Nenhum horário encontrado.
+            </Alert>
+        ) : (
+            <ListGroup>
+              {calendars.map(cal => (
+                  <ListGroup.Item
+                      key={cal.Id || cal.id}
+                      className="d-flex justify-content-between align-items-center"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => handleViewSchedule(cal.Id || cal.id)}
+                  >
+                    <div>
+                      <h5 className="mb-1">{cal.Name}</h5>
+                      {cal.CourseName && (
+                          <small className="text-muted">({cal.CourseName})</small>
+                      )}
+                      <br />
+                      <small className="text-muted">
+                        Criado em: {new Date(cal.CreatedOn).toLocaleDateString('pt-PT')}
+                      </small>
+                    </div>
+                    <div>
+                      <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewSchedule(cal.Id || cal.id);
+                          }}
+                      >
+                        Ver Horário
+                      </Button>
+                    </div>
+                  </ListGroup.Item>
+              ))}
+            </ListGroup>
+        )}
+      </Container>
   );
 }

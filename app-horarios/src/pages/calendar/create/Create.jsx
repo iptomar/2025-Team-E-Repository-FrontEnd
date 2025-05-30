@@ -354,7 +354,9 @@ export default function CalendarCreate() {
             startHour: new Date(event.start).toTimeString().slice(0, 8),
             endHour: new Date(event.end).toTimeString().slice(0, 8),
             createdBy: user.email,
+            dayOfWeek: new Date(event.start).getDay()
         }));
+
 
 
 

@@ -1,0 +1,102 @@
+﻿@use '../../../styles/variables' as *;
+
+/* ===== MAIN LAYOUT ===== */
+.mainContainer {
+  background-color: #ffffff;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ===== TYPOGRAPHY ===== */
+.headerText {
+  color: #b25d31;
+  margin-bottom: 30px;
+  font-weight: 500;
+}
+
+/* ===== CARDS & CONTAINERS ===== */
+.card {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.card .card-body {
+  padding: 1rem;
+  overflow-x: hidden;
+}
+
+.cardHeader {
+  background-color: #f8f9fa;
+  color: #b25d31;
+  font-weight: 500;
+  border: none;
+}
+
+/* ===== BUTTONS ===== */
+.button {
+  background-color: #b25d31;
+  border-color: #b25d31;
+  color: white;
+  font-weight: 400;
+}
+
+/* ===== SCHEDULE INFO ===== */
+.schedule-info {
+  border-left: 4px solid #b25d31;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+  h4 {
+    color: #333;
+    font-weight: 600;
+  }
+
+  p {
+    color: #666;
+    font-size: 0.9rem;
+  }
+}
+
+/* ===== THIRD-PARTY OVERRIDES ===== */
+/* FullCalendar customization - matching Create page exactly */
+.fc-day-today {
+  background-color: transparent !important;
+}
+
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+
+/* Mobile layout transition (under 1000px) */
+@media (max-width: 1100px) {
+  /* Force full width layout */
+  .row > [class*="col-"] {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Stack cards vertically on mobile */
+  .mainContainer .row {
+    flex-direction: column;
+  }
+
+  /* Adjust card spacing for mobile */
+  .card {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Small mobile (under 768px) */
+@media (max-width: 767px) {
+  .mainContainer {
+    padding: 15px;
+  }
+}
+
+/* Very small mobile (under 576px) */
+@media (max-width: 575px) {
+  .mainContainer {
+    padding: 10px;
+  }
+}
