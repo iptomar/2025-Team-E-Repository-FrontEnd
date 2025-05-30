@@ -109,3 +109,19 @@ export const fetchUserSchedules = async (token) => {
   }
   return data;
 };
+
+// Add this function to your existing calendarFetcher.js file
+export const fetchScheduleById = async (scheduleId, token) => {
+    const response = await fetch(`${API_BASE}/api/schedules/${scheduleId}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.message || 'Erro ao buscar horário');
+    }
+    return data;
+};

@@ -6,10 +6,10 @@ export const ROUTES = {
     /** Root login path */
     LOGIN: "/",
     /** Home dashboard path */
-    HOME: "home",
+    HOME: "/home",
 
     /** Calendar section root path */
-    CALENDAR_ROOT: "calendar/",
+    CALENDAR_ROOT: "/calendar/",
     /** Calendar listing page (empty string = index route) */
     CALENDAR_LISTING: "",
     /** Calendar creation page */

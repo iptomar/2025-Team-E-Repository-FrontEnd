@@ -13,5 +13,6 @@ export const fetchClassrooms = async () => {
     if (!response.ok) {
         throw new Error(data.message || 'Erro ao buscar eventos');
     }
-    return data;
+    // Ensure we always return an array
+    return Array.isArray(data) ? data : data.data || [];
 };

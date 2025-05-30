@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import {useNavigate, useLocation} from "react-router-dom";
 import iptLogo from "../../assets/ipt-logo-full.png";
 import "./Navbar.scss";
 import { useAuth } from "../../contexts/AuthContext.jsx";
