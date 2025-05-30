@@ -3,7 +3,7 @@ import { Button, Container, ListGroup, Spinner, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import CreateCalendarModal from '../../../components/Calendar/CreateCalendarModal';
 import { createSchedule, fetchUserSchedules } from '../../../api/calendarFetcher';
-import {FULL_ROUTES} from "../../../routes.jsx";
+import { FULL_ROUTES } from "../../../routes.jsx";
 
 export default function CalendarListing() {
   const navigate = useNavigate();
@@ -20,7 +20,6 @@ export default function CalendarListing() {
 
   const handleCloseModal = () => setShowModal(false);
 
-  // Add this function to handle schedule viewing
   const handleViewSchedule = (scheduleId) => {
     navigate(`/calendar/${scheduleId}/view`);
   };
@@ -42,7 +41,14 @@ export default function CalendarListing() {
     loadCalendars();
   }, []);
 
-  const handleCreateCalendar = async ({ courseId, calendarName, startDate, endDate }) => {
+  const handleCreateCalendar = async ({
+    courseId,
+    calendarName,
+    startDate,
+    endDate,
+    curricularYear,
+    class: className
+  }) => {
     if (new Date(endDate) < new Date(startDate)) {
       setCreateError('A data de fim não pode ser anterior à data de início.');
       return;
@@ -53,7 +59,9 @@ export default function CalendarListing() {
         courseId,
         name: calendarName,
         startDate,
-        endDate
+        endDate,
+        curricularYear,
+        class: className
       });
 
       const token = localStorage.getItem('token');
@@ -64,84 +72,95 @@ export default function CalendarListing() {
         state: {
           scheduleId: data.scheduleId,
           scheduleName: calendarName,
-          startDate: startDate,
-          endDate: endDate,
+          startDate,
+          endDate,
+          curricularYear,
+          class: className
         }
       });
     } catch (error) {
-      const message = error?.response?.data?.error || 'Falha ao criar o calendário. Tente novamente.';
+      const message = error?.message || 'Falha ao criar o calendário. Tente novamente.';
       setCreateError(message);
     }
   };
 
   return (
-      <Container>
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2>Meus Horários</h2>
-          <Button variant="primary" onClick={handleOpenModal}>
-            Criar novo horário
-          </Button>
+    <Container>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2>Meus Horários</h2>
+        <Button variant="primary" onClick={handleOpenModal}>
+          Criar novo horário
+        </Button>
+      </div>
+
+      {createError && (
+        <Alert variant="danger" onClose={() => setCreateError(null)} dismissible>
+          {createError}
+        </Alert>
+      )}
+
+      <CreateCalendarModal
+        show={showModal}
+        onHide={handleCloseModal}
+        onSubmit={handleCreateCalendar}
+      />
+
+      {loading ? (
+        <div className="text-center">
+          <Spinner animation="border" />
         </div>
-
-        {createError && (
-            <Alert variant="danger" onClose={() => setCreateError(null)} dismissible>
-              {createError}
-            </Alert>
-        )}
-
-        <CreateCalendarModal
-            show={showModal}
-            onHide={handleCloseModal}
-            onSubmit={handleCreateCalendar}
-        />
-
-        {loading ? (
-            <div className="text-center">
-              <Spinner animation="border" />
-            </div>
-        ) : error ? (
-            <Alert variant="danger">
-              Erro ao carregar horários: {error}
-            </Alert>
-        ) : calendars.length === 0 ? (
-            <Alert variant="info">
-              Nenhum horário encontrado.
-            </Alert>
-        ) : (
-            <ListGroup>
-              {calendars.map(cal => (
-                  <ListGroup.Item
-                      key={cal.Id || cal.id}
-                      className="d-flex justify-content-between align-items-center"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => handleViewSchedule(cal.Id || cal.id)}
-                  >
-                    <div>
-                      <h5 className="mb-1">{cal.Name}</h5>
-                      {cal.CourseName && (
-                          <small className="text-muted">({cal.CourseName})</small>
-                      )}
-                      <br />
-                      <small className="text-muted">
-                        Criado em: {new Date(cal.CreatedOn).toLocaleDateString('pt-PT')}
-                      </small>
-                    </div>
-                    <div>
-                      <Button
-                          variant="outline-primary"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewSchedule(cal.Id || cal.id);
-                          }}
-                      >
-                        Ver Horário
-                      </Button>
-                    </div>
-                  </ListGroup.Item>
-              ))}
-            </ListGroup>
-        )}
-      </Container>
+      ) : error ? (
+        <Alert variant="danger">
+          Erro ao carregar horários: {error}
+        </Alert>
+      ) : calendars.length === 0 ? (
+        <Alert variant="info">
+          Nenhum horário encontrado.
+        </Alert>
+      ) : (
+        <ListGroup>
+          {calendars.map(cal => (
+            <ListGroup.Item
+              key={cal.Id || cal.id}
+              className="d-flex justify-content-between align-items-center"
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleViewSchedule(cal.Id || cal.id)}
+            >
+              <div>
+                <h5 className="mb-1">{cal.Name}</h5>
+                {cal.CourseName && (
+                  <small className="text-muted">({cal.CourseName})</small>
+                )}
+                <div className="mt-1">
+                  {cal.CurricularYear && (
+                    <div><strong>Ano Curricular:</strong> {cal.CurricularYear}</div>
+                  )}
+                  {cal.Class && (
+                    <div><strong>Turma:</strong> {cal.Class}</div>
+                  )}
+                  <div>
+                    <small className="text-muted">
+                      Criado em: {new Date(cal.CreatedOn).toLocaleDateString('pt-PT')}
+                    </small>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewSchedule(cal.Id || cal.id);
+                  }}
+                >
+                  Ver Horário
+                </Button>
+              </div>
+            </ListGroup.Item>
+          ))}
+        </ListGroup>
+      )}
+    </Container>
   );
 }

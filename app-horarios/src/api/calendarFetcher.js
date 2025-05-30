@@ -69,45 +69,48 @@ export const deleteEvent = async (token, eventId) => {
 };
 
 // Create schedule
-export const createSchedule = async ({ courseId, name, startDate, endDate }) => {
-  const user = JSON.parse(localStorage.getItem('user')); 
+export const createSchedule = async ({ courseId, name, startDate, endDate, curricularYear, class: className }) => {
+    const user = JSON.parse(localStorage.getItem('user'));
 
-  const response = await fetch(`${API_BASE}/api/schedules`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    },
-    body: JSON.stringify({ 
-      courseId, 
-      name, 
-      startDate, 
-      endDate,
-      createdBy: user.id 
-    })
-  });
+    const response = await fetch(`${API_BASE}/api/schedules`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+            courseId,
+            name,
+            startDate,
+            endDate,
+            curricularYear,
+            class: className,
+            createdBy: user.id
+        })
+    });
 
-  if (!response.ok) {
-    throw new Error('Erro ao criar calendário');
-  }
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData?.error || 'Erro ao criar calendário');
+    }
 
-  return response.json();
+    return response.json();
 };
 
 
 export const fetchUserSchedules = async (token) => {
-  const response = await fetch(`${API_BASE}/api/schedules/user/me`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.message || 'Erro ao buscar calendários');
-  }
-  return data;
+    const response = await fetch(`${API_BASE}/api/schedules/user/me`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.message || 'Erro ao buscar calendários');
+    }
+    return data;
 };
 
 // Add this function to your existing calendarFetcher.js file

@@ -171,9 +171,17 @@ const CalendarView = () => {
 
             <div className="schedule-info mb-4 p-3 bg-light rounded text-center">
                 <h4 className="mb-1">{schedule?.Name}</h4>
-                <p className="mb-0">
-                    Horário Semanal - Visualização
-                </p>
+                <p className="mb-0">Horário Semanal - Visualização</p>
+                {schedule?.CurricularYear && (
+                    <p className="mb-0">
+                        <strong>Ano Curricular:</strong> {schedule.CurricularYear}
+                    </p>
+                )}
+                {schedule?.Class && (
+                    <p className="mb-0">
+                        <strong>Turma:</strong> {schedule.Class}
+                    </p>
+                )}
             </div>
 
             <Row>
