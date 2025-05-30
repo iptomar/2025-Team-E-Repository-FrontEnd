@@ -1,39 +1,47 @@
 import { useEffect, useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
-import {fetchCoursesWithProfessors} from "../../api/courseFetcher.js";
+import { fetchCoursesWithProfessors } from "../../api/courseFetcher.js";
 
 const CreateCalendarModal = ({ show, handleClose, onSubmit }) => {
   const [calendarName, setCalendarName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [courses, setCourses] = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  
-  //Vai buscar a informação do curso(s) do professor
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const [curricularYear, setCurricularYear] = useState('');
+  const [className, setClassName] = useState('');
+
   const loadCourses = async () => {
     try {
-      const data = await fetchCoursesWithProfessors(); // recebe os cursos do backend
-      setCourses(data); // guarda na state
-      } catch (err) {
-        console.error("Erro ao carregar cursos:", err);
-      }
-    };
-  
-    useEffect(() => {
-      loadCourses();  
-    }, []);
+      const data = await fetchCoursesWithProfessors();
+      setCourses(data);
+    } catch (err) {
+      console.error("Erro ao carregar cursos:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadCourses();
+  }, []);
 
   const handleFormSubmit = () => {
-    onSubmit({ 
+    onSubmit({
       courseId: selectedCourse,
-      calendarName, 
-      startDate, 
-      endDate });
-    handleClose(); 
+      calendarName,
+      startDate,
+      endDate,
+      curricularYear,
+      class: className
+    });
+    handleClose();
+
+    // Reset fields
     setSelectedCourse('');
     setCalendarName('');
     setStartDate('');
     setEndDate('');
+    setCurricularYear('');
+    setClassName('');
   };
 
   return (
@@ -53,20 +61,47 @@ const CreateCalendarModal = ({ show, handleClose, onSubmit }) => {
             />
           </Form.Group>
 
-          <Form.Group controlId="courseSelect">
+          <Form.Group controlId="courseSelect" className="mb-3">
             <Form.Label>Curso</Form.Label>
-            <Form.Control
-              as="select"
+            <Form.Select
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
             >
               <option value="">Selecione um curso</option>
               {courses.map((course) => (
-                 <option key={course.CourseFK} value={course.CourseFK}>
-                   {course.Name}
+                <option key={course.CourseFK} value={course.CourseFK}>
+                  {course.Name}
                 </option>
               ))}
-            </Form.Control>
+            </Form.Select>
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Ano Curricular</Form.Label>
+            <Form.Select
+              value={curricularYear}
+              onChange={(e) => setCurricularYear(e.target.value)}
+            >
+              <option value="">Selecione o ano</option>
+              <option value="1º Ano">1º Ano</option>
+              <option value="2º Ano">2º Ano</option>
+              <option value="3º Ano">3º Ano</option>
+            </Form.Select>
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Turma</Form.Label>
+            <Form.Select
+              value={className}
+              onChange={(e) => setClassName(e.target.value)}
+            >
+              <option value="">Selecione a turma</option>
+              <option value="Turma A">Turma A</option>
+              <option value="Turma B">Turma B</option>
+              <option value="Turma C">Turma C</option>
+              <option value="Turma D">Turma D</option>
+              <option value="Turma E">Turma E</option>
+            </Form.Select>
           </Form.Group>
 
           <Form.Group className="mb-3">
@@ -77,6 +112,7 @@ const CreateCalendarModal = ({ show, handleClose, onSubmit }) => {
               onChange={(e) => setStartDate(e.target.value)}
             />
           </Form.Group>
+
           <Form.Group className="mb-3">
             <Form.Label>Data de fim</Form.Label>
             <Form.Control

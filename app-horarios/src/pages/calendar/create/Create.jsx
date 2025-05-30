@@ -1,14 +1,5 @@
 ﻿import { useState, useEffect, useRef, Fragment } from "react";
-import {
-    Container,
-    Row,
-    Col,
-    Card,
-    Button,
-    Form,
-    Alert,
-    Badge,
-} from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Form, Alert, Badge, } from "react-bootstrap";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -392,8 +383,18 @@ export default function CalendarCreate() {
             <div className="schedule-info mb-4 p-3 bg-light rounded text-center">
                 <h4 className="mb-1">{scheduleName}</h4>
                 <p className="mb-0">
-                    Período: {(startDate)} a {(endDate)}
+                    Período: {startDate} a {endDate}
                 </p>
+                {location.state?.curricularYear && (
+                    <p className="mb-0">
+                        <strong>Ano Curricular:</strong> {location.state.curricularYear}
+                    </p>
+                )}
+                {location.state?.class && (
+                    <p className="mb-0">
+                        <strong>Turma:</strong> {location.state.class}
+                    </p>
+                )}
             </div>
 
             {message.text && (

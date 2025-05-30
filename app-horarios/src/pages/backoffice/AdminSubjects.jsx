@@ -25,7 +25,8 @@ const AdminSubjects = () => {
         HoursT: 0,
         HoursTP: 0,
         HoursP: 0,
-        TotalHours: 0
+        TotalHours: 0,
+        CurricularYear: "1º Ano"
     });
 
     const isEditMode = modalData.id !== null;
@@ -69,7 +70,8 @@ const AdminSubjects = () => {
             HoursT: 0,
             HoursTP: 0,
             HoursP: 0,
-            TotalHours: 0
+            TotalHours: 0,
+            CurricularYear: "1º Ano"
         });
         setShowModal(true);
     };
@@ -92,8 +94,12 @@ const AdminSubjects = () => {
     };
 
     const handleSave = async () => {
-        const { IdSubject, Name, Description, Tipologia, HoursT, HoursTP, HoursP, TotalHours } = modalData;
-        if (!IdSubject || !Name || !Description || !Tipologia) {
+        const {
+            IdSubject, Name, Description, Tipologia,
+            HoursT, HoursTP, HoursP, TotalHours, CurricularYear
+        } = modalData;
+
+        if (!IdSubject || !Name || !Description || !Tipologia || !CurricularYear) {
             alert("Por favor preencha todos os campos obrigatórios.");
             return;
         }
@@ -113,6 +119,7 @@ const AdminSubjects = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 });
             }
+
             setShowModal(false);
             fetchSubjects();
         } catch (err) {
@@ -129,7 +136,7 @@ const AdminSubjects = () => {
 
             <InputGroup className="mb-3">
                 <FormControl
-                    placeholder="Pesquisar por nome ou descrição..."
+                    placeholder="Pesquisar por nome ou descrição"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
@@ -145,6 +152,7 @@ const AdminSubjects = () => {
                                 <th>ID</th>
                                 <th>Nome</th>
                                 <th>Tipologia</th>
+                                <th>Ano Curricular</th>
                                 <th>Horas Totais</th>
                                 <th>Ações</th>
                             </tr>
@@ -152,7 +160,7 @@ const AdminSubjects = () => {
                         <tbody>
                             {subjects.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="text-center text-muted">
+                                    <td colSpan="6" className="text-center text-muted">
                                         Sem resultados encontrados.
                                     </td>
                                 </tr>
@@ -162,6 +170,7 @@ const AdminSubjects = () => {
                                         <td>{s.IdSubject}</td>
                                         <td>{s.Name}</td>
                                         <td>{s.Tipologia}</td>
+                                        <td>{s.CurricularYear}</td>
                                         <td>{s.TotalHours}</td>
                                         <td>
                                             <Button variant="outline-primary" size="sm" onClick={() => openEditModal(s)} className="me-2">Editar</Button>
@@ -207,6 +216,7 @@ const AdminSubjects = () => {
                                 />
                             </Form.Group>
                         ))}
+
                         <Form.Group className="mb-3">
                             <Form.Label>Tipologia</Form.Label>
                             <Form.Select
@@ -216,6 +226,18 @@ const AdminSubjects = () => {
                                 <option value="Teorica">Teórica</option>
                                 <option value="Pratica">Prática</option>
                                 <option value="Teorico-Pratica">Teórico-Prática</option>
+                            </Form.Select>
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label>Ano Curricular</Form.Label>
+                            <Form.Select
+                                value={modalData.CurricularYear}
+                                onChange={(e) => setModalData({ ...modalData, CurricularYear: e.target.value })}
+                            >
+                                <option value="1º Ano">1º Ano</option>
+                                <option value="2º Ano">2º Ano</option>
+                                <option value="3º Ano">3º Ano</option>
                             </Form.Select>
                         </Form.Group>
                     </Form>
