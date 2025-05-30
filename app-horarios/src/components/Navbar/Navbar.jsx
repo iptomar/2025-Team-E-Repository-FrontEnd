@@ -15,14 +15,16 @@ const Navbar = () => {
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        navigate(FULL_ROUTES.LOGIN); // Redirect to login
+        navigate(FULL_ROUTES.LOGIN);
     };
 
     const getPageTitle = () => {
-        if (location.pathname.includes("/calendario")) {
-            return "Calendário";
+        if (location.pathname.includes("/calendar")) {
+            return "Gestão de Horários";
         } else if (location.pathname.includes("/home")) {
-            return "Meus horários";
+            return "Meus Horários";
+        } else if (location.pathname.includes("/backoffice")) {
+            return "Administração";
         } else {
             return "Gestão de Horários";
         }
@@ -32,33 +34,43 @@ const Navbar = () => {
         navigate(FULL_ROUTES.BACKOFFICE.HOME);
     };
 
+    const goToHome = () => {
+        navigate(FULL_ROUTES.CALENDAR.LISTING);
+    };
+
     if (isAuthenticated) {
         return (
             <nav className="navbar">
                 <div className="navbar-left">
                     <img src={iptLogo} alt="IPT Logo" className="navbar-logo" />
-                    <span className="navbar-title">{getPageTitle()}</span>
+                    <span
+                        className="navbar-title navbar-title--clickable"
+                        onClick={goToHome}
+                    >
+                        {getPageTitle()}
+                    </span>
                 </div>
                 <div className="navbar-center">
                     <ul className="navbar-links">
-                        <li><a href="/home">Meus horários</a></li>
+                        {user.role === "Admin" && (
+                            <li>
+                                <button
+                                    className="navbar-link-btn"
+                                    onClick={goToBackoffice}
+                                >
+                                    Administração
+                                </button>
+                            </li>
+                        )}
                     </ul>
                 </div>
                 <div className="navbar-right">
                     {user && user.email && (
                         <>
-                            {user.role === "Admin" ? (
-                                <span
-                                    className="navbar-email navbar-email--link"
-                                    onClick={goToBackoffice}
-                                    style={{ cursor: "pointer", textDecoration: "underline" }}
-                                >
-                                    {user.email}
-                                </span>
-                            ) : (
-                                <span className="navbar-email">{user.email}</span>
-                            )}
-                            <button className="navbar-logout" onClick={handleLogout}>Logout</button>
+                            <span className="navbar-email">{user.email}</span>
+                            <button className="navbar-logout" onClick={handleLogout}>
+                                Logout
+                            </button>
                         </>
                     )}
                 </div>

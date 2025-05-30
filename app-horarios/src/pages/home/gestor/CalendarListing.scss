@@ -1,0 +1,98 @@
+﻿@use '../../../styles/variables' as *;
+
+/* ===== MAIN LAYOUT ===== */
+.mainContainer {
+  background-color: #ffffff;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ===== TYPOGRAPHY ===== */
+.headerText {
+  color: #b25d31;
+  margin-bottom: 30px;
+  font-weight: 500;
+}
+
+/* ===== CARDS & CONTAINERS ===== */
+.card {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.card .card-body {
+  padding: 1rem;
+  overflow-x: hidden;
+}
+
+/* ===== BUTTONS ===== */
+.button {
+  background-color: #b25d31;
+  border-color: #b25d31;
+  color: white;
+  font-weight: 400;
+}
+
+/* ===== SCHEDULE ITEMS ===== */
+.schedule-item {
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 1rem;
+
+  &:hover {
+    background-color: #f8f9fa;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  color: #666;
+
+  h5 {
+    font-weight: 500;
+  }
+
+  p {
+    font-size: 0.9rem;
+  }
+}
+
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+@media (max-width: 767px) {
+  .mainContainer {
+    padding: 15px;
+  }
+
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+
+  .headerText {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 575px) {
+  .mainContainer {
+    padding: 10px;
+  }
+
+  .schedule-item {
+    .d-flex {
+      flex-direction: column;
+      align-items: flex-start !important;
+      gap: 1rem;
+    }
+  }
+}

@@ -10,6 +10,7 @@ import { fetchClassrooms } from '../../../api/classroomFetcher';
 import { fetchSubjectsWithProfessors } from '../../../api/courseFetcher';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './View.scss';
+import {FULL_ROUTES} from "../../../routes.jsx";
 
 const CalendarView = () => {
     const { scheduleId } = useParams();
@@ -190,15 +191,11 @@ const CalendarView = () => {
                                 </Button>
                                 <Button
                                     className="button"
-                                    onClick={() => navigate(`/calendar/create`, {
-                                        state: {
-                                            scheduleId: scheduleId,
-                                            scheduleName: schedule?.Name
-                                        }
-                                    })}
+                                    onClick={() => navigate(FULL_ROUTES.CALENDAR.EDIT.replace(':scheduleId', scheduleId))}
                                 >
                                     ✏️ Editar Horário
                                 </Button>
+
                             </div>
                         </Card.Body>
                     </Card>

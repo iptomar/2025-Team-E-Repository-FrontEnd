@@ -16,6 +16,8 @@ export const ROUTES = {
     CALENDAR_CREATE: "create",
     /** Calendar view page with dynamic schedule ID */
     CALENDAR_VIEW: ":scheduleId/view",
+    /** Calendar edit page with dynamic schedule ID */
+    CALENDAR_EDIT: ":scheduleId/edit",
 
     /** Backoffice section root path */
     BACKOFFICE_ROOT: "backoffice/",
@@ -64,6 +66,8 @@ export const FULL_ROUTES = {
         CREATE: `${ROUTES.CALENDAR_ROOT}${ROUTES.CALENDAR_CREATE}`,
         /** Calendar view page - /calendar/:scheduleId/view */
         VIEW: `${ROUTES.CALENDAR_ROOT}${ROUTES.CALENDAR_VIEW}`,
+        /** Calendar edit page - /calendar/:scheduleId/edit */
+        EDIT: `${ROUTES.CALENDAR_ROOT}${ROUTES.CALENDAR_EDIT}`,
     },
 
     /** Backoffice administration routes */
@@ -79,7 +83,7 @@ export const FULL_ROUTES = {
         /** Subjects management - /backoffice/subjects */
         SUBJECTS: `${ROUTES.BACKOFFICE_ROOT}${ROUTES.BACKOFFICE_SUBJECTS}`,
         /** Classrooms management - /backoffice/classrooms */
-        CLASSROOMS: `${ROUTES.BACKOFFICE_ROOT}${ROUTES.BACKOFFICE_CLASSROOMS}`,
+        CLASSROOMS: `${ROUTES.CALENDAR_ROOT}${ROUTES.BACKOFFICE_CLASSROOMS}`,
         /** People management - /backoffice/people */
         PEOPLE: `${ROUTES.BACKOFFICE_ROOT}${ROUTES.BACKOFFICE_PEOPLE}`,
         /** Professor-Subject relationships - /backoffice/profsubj */

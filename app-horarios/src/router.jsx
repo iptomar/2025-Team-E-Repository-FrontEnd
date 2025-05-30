@@ -13,6 +13,7 @@ import AdminProfSubj from "./pages/backoffice/AdminProfSubj.jsx";
 import AdminCourseSubj from "./pages/backoffice/AdminCourseSubj.jsx";
 import CalendarCreate from "./pages/calendar/create/Create.jsx";
 import CalendarView from "./pages/calendar/view/View.jsx";
+import CalendarEdit from "./pages/calendar/edit/Edit.jsx";
 import { ROUTES } from "./routes.jsx";
 
 const router = createBrowserRouter([
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
                                     { path: ROUTES.CALENDAR_LISTING, element: <CalendarsPage /> },
                                     { path: ROUTES.CALENDAR_CREATE, element: <CalendarCreate /> },
                                     { path: ROUTES.CALENDAR_VIEW, element: <CalendarView /> },
+                                    { path: ROUTES.CALENDAR_EDIT, element: <CalendarEdit /> },
                                 ],
                             },
                         ],
