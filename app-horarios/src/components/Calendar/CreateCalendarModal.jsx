@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { fetchCoursesWithProfessors } from "../../api/courseFetcher.js";
 
-const CreateCalendarModal = ({ show, handleClose, onSubmit }) => {
+const CreateCalendarModal = ({ show, onHide, onSubmit }) => {
   const [calendarName, setCalendarName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -33,7 +33,7 @@ const CreateCalendarModal = ({ show, handleClose, onSubmit }) => {
       curricularYear,
       class: className
     });
-    handleClose();
+    onHide();
 
     // Reset fields
     setSelectedCourse('');
@@ -45,7 +45,7 @@ const CreateCalendarModal = ({ show, handleClose, onSubmit }) => {
   };
 
   return (
-    <Modal show={show} onHide={handleClose}>
+    <Modal show={show} onHide={onHide}>
       <Modal.Header closeButton>
         <Modal.Title>Criar novo horário</Modal.Title>
       </Modal.Header>
@@ -124,7 +124,7 @@ const CreateCalendarModal = ({ show, handleClose, onSubmit }) => {
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
+        <Button variant="secondary" onClick={onHide}>
           Cancelar
         </Button>
         <Button variant="primary" onClick={handleFormSubmit}>
