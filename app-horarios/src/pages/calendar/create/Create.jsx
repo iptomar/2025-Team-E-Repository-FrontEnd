@@ -244,20 +244,39 @@ export default function CalendarCreate() {
 
     // Handle room assignment
     const handleRoomAssign = () => {
-        if (!selectedRoom) {
-            setMessage({ text: "Selecione uma sala para a aula", type: "warning" });
-            return;
-        }
-
+        // Checks if there are rooms available
         if (!Array.isArray(rooms) || rooms.length === 0) {
             setMessage({ text: "Dados de sala indisponíveis", type: "danger" });
             return;
         }
 
-        // Check if the selected room is already booked for this time slot
+        //Checks if a room is selected
+        if (!selectedRoom) {
+            setMessage({ text: "Selecione uma sala para a aula", type: "warning" });
+            return;
+        }
+
+        // Info to send to block
+        const selectedCourse = courses.find(
+            (c) => c.id === selectedEvent.extendedProps.courseId
+        );
+        const room = rooms.find(r => r.id === parseInt(selectedRoom));
+        const roomName = room ? room.name : "Sala desconhecida";
+        const professor = selectedCourse.professor;
         const eventStart = new Date(selectedEvent.start);
         const eventEnd = new Date(selectedEvent.end);
+        
+        // Data to send to buffer
+        const dataToBuffer = {
+            roomId: room.id,
+            professorName: professor,
+            eventStart: eventStart,
+            eventEnd: eventEnd
+        };
 
+        socket.emit("adicionarSala", dataToBuffer);
+
+        // Check if the selected room is already booked for this time slot
         const roomConflict = events.some((event) => {
             if (parseInt(event.id) === parseInt(selectedEvent.id)) return false;
 
@@ -270,6 +289,7 @@ export default function CalendarCreate() {
             );
         });
 
+        // If room is ocuppied 
         if (roomConflict) {
             setMessage({
                 text: "Esta sala já está ocupada neste horário",
@@ -278,21 +298,7 @@ export default function CalendarCreate() {
             return;
         }
 
-            const dataParaBuffer = {
-            sala: selectedRoom,
-            aulaId: selectedEvent.id,
-        };
-
-        socket.emit("adicionarSala", dataParaBuffer);
-        
-
-        const selectedCourse = courses.find(
-            (c) => c.id === selectedEvent.extendedProps.courseId
-        );
-        const room = rooms.find(r => r.id === parseInt(selectedRoom));
-        const roomName = room ? room.name : "Sala desconhecida";
-        const professor = selectedCourse.professor;
-
+        // Case if everything is ok
         setEvents(
             events.map((event) => {
                 if (parseInt(event.id) === parseInt(selectedEvent.id)) {
@@ -309,6 +315,7 @@ export default function CalendarCreate() {
             })
         );
 
+        // Closes the model 
         setShowRoomModal(false);
         setMessage({ text: `Sala atribuída com sucesso!`, type: "success" });
     };
