@@ -11,6 +11,7 @@ import { createEvent } from "../../../api/calendarFetcher.js";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FULL_ROUTES } from "../../../routes.jsx";
 import { fetchClassrooms } from "../../../api/classroomFetcher.js";
+import { io } from "socket.io-client";
 
 /**
  * CalendarCreate Component
@@ -20,6 +21,21 @@ import { fetchClassrooms } from "../../../api/classroomFetcher.js";
  */
 export default function CalendarCreate() {
     const navigate = useNavigate();
+
+        //websockets
+    //usar porta do backend
+    const socket = io("http://localhost:3001"); 
+
+    //todo ver aqui como vou fazer
+    // exemplo de evento recebido
+    socket.on("status", (data) => {
+        console.log("Status recebido do backend:", data);
+    });
+
+    socket.on("atualizacao", (data) => {
+        console.log("Atualização recebida:", data);
+    });
+
 
     // State for courses.jsx and their required hours
     const [courses, setCourses] = useState([]);
@@ -262,12 +278,21 @@ export default function CalendarCreate() {
             return;
         }
 
+            const dataParaBuffer = {
+            sala: selectedRoom,
+            aulaId: selectedEvent.id,
+        };
+
+        socket.emit("adicionarSala", dataParaBuffer);
+        
+
         const selectedCourse = courses.find(
             (c) => c.id === selectedEvent.extendedProps.courseId
         );
         const room = rooms.find(r => r.id === parseInt(selectedRoom));
         const roomName = room ? room.name : "Sala desconhecida";
         const professor = selectedCourse.professor;
+
         setEvents(
             events.map((event) => {
                 if (parseInt(event.id) === parseInt(selectedEvent.id)) {
