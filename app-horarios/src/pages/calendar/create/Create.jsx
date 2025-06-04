@@ -394,7 +394,16 @@ export default function CalendarCreate() {
             dayOfWeek: new Date(event.start).getDay()
         }));
 
-
+        //Remove from the buffer the blocks of the schedule
+        // When a schedule is saved, we need to remove the blocks from the buffer 
+        events.forEach(event => { // For every event in the schedule
+            // Emit the event to remove the room from the buffer
+            socket.emit("removerSala", {
+                roomId: parseInt(event.extendedProps.room),
+                eventStart: new Date(event.start).toISOString(), // Full ISO string
+                eventEnd: new Date(event.end).toISOString()      // Full ISO string
+            });
+        });
 
 
         console.log("Horário guardado:", scheduleList);
