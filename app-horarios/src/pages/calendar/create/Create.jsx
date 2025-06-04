@@ -343,6 +343,14 @@ export default function CalendarCreate() {
             )
         );
 
+        // Remove room from buffer
+        socket.emit("removerSala", {
+            roomId: parseInt(selectedEvent.extendedProps.room),
+            eventStart: new Date(selectedEvent.start).toISOString(), 
+            eventEnd: new Date(selectedEvent.end).toISOString()    
+        });
+
+
         setEvents(
             events.filter((e) => parseInt(e.id) !== parseInt(selectedEvent.id))
         );
