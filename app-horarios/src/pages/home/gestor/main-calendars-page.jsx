@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Container, ListGroup, Spinner, Alert } from 'react-bootstrap';
+import { Button, Container, ListGroup, Spinner, Alert, Pagination} from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import CreateCalendarModal from '../../../components/Calendar/CreateCalendarModal';
 import { createSchedule, fetchUserSchedules } from '../../../api/calendarFetcher';
@@ -12,6 +12,12 @@ export default function CalendarListing() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [createError, setCreateError] = useState(null);
+
+  //pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(5); // 5 schedules per page as requested on the Issue #86
+
 
   const handleOpenModal = () => {
     setCreateError(null);
@@ -27,9 +33,16 @@ export default function CalendarListing() {
   useEffect(() => {
     const loadCalendars = async () => {
       try {
+        setLoading(true);
         const token = localStorage.getItem('token');
-        const data = await fetchUserSchedules(token);
-        setCalendars(data);
+        const { schedules, total } = await fetchUserSchedules(
+          token, 
+          currentPage, 
+          itemsPerPage
+        );
+        
+        setCalendars(schedules);
+        setTotalPages(Math.ceil(total / itemsPerPage));
         setError(null);
       } catch (err) {
         setError(err.message);
@@ -39,7 +52,7 @@ export default function CalendarListing() {
     };
 
     loadCalendars();
-  }, []);
+  }, [currentPage]);
 
   const handleCreateCalendar = async ({
     courseId,
@@ -64,9 +77,8 @@ export default function CalendarListing() {
         class: className
       });
 
-      const token = localStorage.getItem('token');
-      const updatedCalendars = await fetchUserSchedules(token);
-      setCalendars(updatedCalendars);
+      setCurrentPage(1);
+
 
       navigate(FULL_ROUTES.CALENDAR.CREATE, {
         state: {
@@ -160,6 +172,46 @@ export default function CalendarListing() {
             </ListGroup.Item>
           ))}
         </ListGroup>
+      )}
+      {!loading && totalPages > 1 && (
+        <div className="d-flex justify-content-center mt-4">
+          <Pagination>
+            <Pagination.Prev 
+              disabled={currentPage === 1} 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+            />
+            
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              // Calculate page numbers to show
+              let startPage;
+              if (totalPages <= 5) {
+                startPage = 1;
+              } else if (currentPage <= 3) {
+                startPage = 1;
+              } else if (currentPage >= totalPages - 2) {
+                startPage = totalPages - 4;
+              } else {
+                startPage = currentPage - 2;
+              }
+              
+              const pageNumber = startPage + i;
+              return (
+                <Pagination.Item
+                  key={pageNumber}
+                  active={pageNumber === currentPage}
+                  onClick={() => setCurrentPage(pageNumber)}
+                >
+                  {pageNumber}
+                </Pagination.Item>
+              );
+            })}
+            
+            <Pagination.Next 
+              disabled={currentPage === totalPages} 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+            />
+          </Pagination>
+        </div>
       )}
     </Container>
   );
