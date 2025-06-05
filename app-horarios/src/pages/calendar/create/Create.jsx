@@ -11,6 +11,7 @@ import { createEvent } from "../../../api/calendarFetcher.js";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FULL_ROUTES } from "../../../routes.jsx";
 import { fetchClassrooms } from "../../../api/classroomFetcher.js";
+import { io } from "socket.io-client";
 
 /**
  * CalendarCreate Component
@@ -20,6 +21,11 @@ import { fetchClassrooms } from "../../../api/classroomFetcher.js";
  */
 export default function CalendarCreate() {
     const navigate = useNavigate();
+
+    //websockets
+    //usar porta do backend
+    const socket = io("http://localhost:3001"); 
+    //const [calendarioBuffer, setCalendarioBuffer] = useState([]);
 
     // State for courses.jsx and their required hours
     const [courses, setCourses] = useState([]);
@@ -75,7 +81,7 @@ export default function CalendarCreate() {
 
     const { scheduleId, scheduleName, startDate, endDate } = location.state;
 
-
+    //fetches classrooms to dorpdown
     useEffect(() => {
         const loadClassrooms = async () => {
             try {
@@ -227,21 +233,56 @@ export default function CalendarCreate() {
     };
 
     // Handle room assignment
-    const handleRoomAssign = () => {
-        if (!selectedRoom) {
-            setMessage({ text: "Selecione uma sala para a aula", type: "warning" });
-            return;
-        }
-
+    const handleRoomAssign = async () => {
+        // Checks if there are rooms available
         if (!Array.isArray(rooms) || rooms.length === 0) {
             setMessage({ text: "Dados de sala indisponíveis", type: "danger" });
             return;
         }
 
-        // Check if the selected room is already booked for this time slot
+        //Checks if a room is selected
+        if (!selectedRoom) {
+            setMessage({ text: "Selecione uma sala para a aula", type: "warning" });
+            return;
+        }
+
+        // Info to send to block
+        const selectedCourse = courses.find(
+            (c) => c.id === selectedEvent.extendedProps.courseId
+        );
+        const room = rooms.find(r => r.id === parseInt(selectedRoom));
+        const roomName = room ? room.name : "Sala desconhecida";
+        const professor = selectedCourse.professor;
         const eventStart = new Date(selectedEvent.start);
         const eventEnd = new Date(selectedEvent.end);
+        
+        // Data to send to buffer
+        const dataToBuffer = {
+            roomId: room.id,
+            professorName: professor,
+            eventStart: eventStart,
+            eventEnd: eventEnd
+        };
 
+        // 🟡 Aguarda confirmação do backend
+        const isSalaDisponivel = await new Promise((resolve) => {
+            socket.emit("adicionarSala", dataToBuffer);
+
+            socket.once("respostaBuffer", (resposta) => {
+                if (resposta.status === "ok") {
+                    resolve(true);
+                } else {
+                    alert("Esta sala já está ocupada neste horário");
+                    setSelectedRoom(""); // limpa a seleção se quiseres
+                    resolve(false);
+                }
+            });
+        });
+
+        if (!isSalaDisponivel) return;
+
+        //todo. aqui: lOGICA DE IR BUSCAR Á BASE DE DADOS!!
+        // Check if the selected room is already booked for this time slot
         const roomConflict = events.some((event) => {
             if (parseInt(event.id) === parseInt(selectedEvent.id)) return false;
 
@@ -250,10 +291,11 @@ export default function CalendarCreate() {
             return (
                 event.extendedProps.room === selectedRoom &&
                 start < eventEnd &&
-                end > eventStart
+                end > eventStart    
             );
         });
 
+        // If room is ocuppied 
         if (roomConflict) {
             setMessage({
                 text: "Esta sala já está ocupada neste horário",
@@ -262,12 +304,7 @@ export default function CalendarCreate() {
             return;
         }
 
-        const selectedCourse = courses.find(
-            (c) => c.id === selectedEvent.extendedProps.courseId
-        );
-        const room = rooms.find(r => r.id === parseInt(selectedRoom));
-        const roomName = room ? room.name : "Sala desconhecida";
-        const professor = selectedCourse.professor;
+        // Case if everything is ok
         setEvents(
             events.map((event) => {
                 if (parseInt(event.id) === parseInt(selectedEvent.id)) {
@@ -284,6 +321,7 @@ export default function CalendarCreate() {
             })
         );
 
+        // Closes the model 
         setShowRoomModal(false);
         setMessage({ text: `Sala atribuída com sucesso!`, type: "success" });
     };
@@ -304,6 +342,14 @@ export default function CalendarCreate() {
                     : course
             )
         );
+
+        // Remove room from buffer
+        socket.emit("removerSala", {
+            roomId: parseInt(selectedEvent.extendedProps.room),
+            eventStart: new Date(selectedEvent.start).toISOString(), 
+            eventEnd: new Date(selectedEvent.end).toISOString()    
+        });
+
 
         setEvents(
             events.filter((e) => parseInt(e.id) !== parseInt(selectedEvent.id))
@@ -348,7 +394,16 @@ export default function CalendarCreate() {
             dayOfWeek: new Date(event.start).getDay()
         }));
 
-
+        //Remove from the buffer the blocks of the schedule
+        // When a schedule is saved, we need to remove the blocks from the buffer 
+        events.forEach(event => { // For every event in the schedule
+            // Emit the event to remove the room from the buffer
+            socket.emit("removerSala", {
+                roomId: parseInt(event.extendedProps.room),
+                eventStart: new Date(event.start).toISOString(), // Full ISO string
+                eventEnd: new Date(event.end).toISOString()      // Full ISO string
+            });
+        });
 
 
         console.log("Horário guardado:", scheduleList);
