@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Container, ListGroup, Spinner, Alert, Pagination} from 'react-bootstrap';
+import { Button, Container, ListGroup, Spinner, Alert, Pagination, Form} from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import CreateCalendarModal from '../../../components/Calendar/CreateCalendarModal';
 import { createSchedule, fetchUserSchedules } from '../../../api/calendarFetcher';
@@ -18,6 +18,8 @@ export default function CalendarListing() {
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage] = useState(5); // 5 schedules per page as requested on the Issue #86
 
+  //search
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleOpenModal = () => {
     setCreateError(null);
@@ -38,7 +40,8 @@ export default function CalendarListing() {
         const { schedules, total } = await fetchUserSchedules(
           token, 
           currentPage, 
-          itemsPerPage
+          itemsPerPage,
+          searchTerm
         );
         
         setCalendars(schedules);
@@ -51,8 +54,13 @@ export default function CalendarListing() {
       }
     };
 
-    loadCalendars();
-  }, [currentPage]);
+    // Add debounce to prevent excessive API calls
+    const debounceTimer = setTimeout(() => {
+      loadCalendars();
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [currentPage, searchTerm]);
 
   const handleCreateCalendar = async ({
     courseId,
@@ -98,12 +106,21 @@ export default function CalendarListing() {
 
   return (
     <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Meus Horários</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4 mt-4">
+        <div className="d-flex align-items-center">
+          <Form.Control
+            type="text"
+            placeholder="Pesquisar por nome..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: '250px', marginRight: '15px'}}
+          />
         <Button variant="primary" onClick={handleOpenModal}>
           Criar novo horário
         </Button>
+        </div>
       </div>
+
 
       {createError && (
         <Alert variant="danger" onClose={() => setCreateError(null)} dismissible>
