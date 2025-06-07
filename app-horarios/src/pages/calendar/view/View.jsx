@@ -209,7 +209,7 @@ const CalendarView = () => {
                                     className="button"
                                     onClick={() => navigate(`/calendar/create`, {
                                         state: {
-                                              scheduleId: schedule.scheduleId,
+                                              scheduleId: scheduleId,
                                               scheduleName: schedule.calendarName,
                                               startDate: new Date(startDate).toISOString(),
                                               endDate: new Date(endDate).toISOString()

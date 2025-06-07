@@ -419,6 +419,8 @@ export default function CalendarCreate() {
             dayOfWeek: new Date(event.start).getDay()
         }));
 
+        console.log(scheduleList);
+
         //Remove from the buffer the blocks of the schedule
         // When a schedule is saved, we need to remove the blocks from the buffer 
         events.forEach(event => { // For every event in the schedule
