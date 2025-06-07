@@ -23,9 +23,23 @@ export default function CalendarCreate() {
     const navigate = useNavigate();
 
     //websockets
-    //usar porta do backend
-    const socket = io("http://localhost:3001"); 
-    //const [calendarioBuffer, setCalendarioBuffer] = useState([]);
+    //websockets
+    const [socket, setSocket] = useState(null);
+
+    useEffect(() => {
+        const newSocket = io("http://localhost:3001");
+
+        setSocket(newSocket);
+
+        newSocket.on('connect', () => {
+        console.log('WebSocket: Cliente conectado -', newSocket.id);
+        });
+
+        // Cleanup
+        return () => {
+        newSocket.disconnect();
+        };
+    }, []);
 
     // State for courses.jsx and their required hours
     const [courses, setCourses] = useState([]);
