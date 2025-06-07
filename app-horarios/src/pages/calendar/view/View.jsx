@@ -20,6 +20,9 @@ const CalendarView = () => {
     const [error, setError] = useState(null);
     const [events, setEvents] = useState([]);
 
+    const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
+
     useEffect(() => {
         const getWeekStart = (date) => {
             const d = new Date(date);
@@ -50,8 +53,12 @@ const CalendarView = () => {
                 const eventDate = new Date(weekStart);
                 eventDate.setDate(weekStart.getDate() + (dayOfWeek - 1));
 
-                const [startHour, startMinute] = block.StartHour.split(':');
-                const [endHour, endMinute] = block.EndHour.split(':');
+                const startDateTime = new Date(block.StartHour);
+                const endDateTime = new Date(block.EndHour);
+
+                // Usa apenas as horas e minutos dos blocos (ignorando a data deles)
+                const [startHour, startMinute] = [startDateTime.getHours(), startDateTime.getMinutes()];
+                const [endHour, endMinute] = [endDateTime.getHours(), endDateTime.getMinutes()];
 
                 const start = new Date(eventDate);
                 start.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
@@ -87,6 +94,8 @@ const CalendarView = () => {
                     fetchSubjectsWithProfessors()
                 ]);
                 setSchedule(scheduleData);
+                setStartDate(scheduleData.StartDate) 
+                setEndDate(scheduleData.EndDate) 
 
                 if (scheduleData?.blocks) {
                     const calendarEvents = transformBlocksToEvents(
@@ -200,8 +209,10 @@ const CalendarView = () => {
                                     className="button"
                                     onClick={() => navigate(`/calendar/create`, {
                                         state: {
-                                            scheduleId: scheduleId,
-                                            scheduleName: schedule?.Name
+                                              scheduleId: schedule.scheduleId,
+                                              scheduleName: schedule.calendarName,
+                                              startDate: new Date(startDate).toISOString(),
+                                              endDate: new Date(endDate).toISOString()
                                         }
                                     })}
                                 >
@@ -272,3 +283,4 @@ const CalendarView = () => {
 };
 
 export default CalendarView;
+ 

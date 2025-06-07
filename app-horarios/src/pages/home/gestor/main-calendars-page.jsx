@@ -87,7 +87,6 @@ export default function CalendarListing() {
 
       setCurrentPage(1);
 
-
       navigate(FULL_ROUTES.CALENDAR.CREATE, {
         state: {
           scheduleId: data.scheduleId,
