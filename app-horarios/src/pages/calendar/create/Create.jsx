@@ -11,6 +11,7 @@ import { createEvent } from "../../../api/calendarFetcher.js";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FULL_ROUTES } from "../../../routes.jsx";
 import { fetchClassrooms } from "../../../api/classroomFetcher.js";
+import { fetchOverlappingBlocks } from "../../../api/blocksFetcher.js";
 import { io } from "socket.io-client";
 
 /**
@@ -22,7 +23,6 @@ import { io } from "socket.io-client";
 export default function CalendarCreate() {
     const navigate = useNavigate();
 
-    //websockets
     //websockets
     const [socket, setSocket] = useState(null);
 
@@ -40,6 +40,7 @@ export default function CalendarCreate() {
         newSocket.disconnect();
         };
     }, []);
+
 
     // State for courses.jsx and their required hours
     const [courses, setCourses] = useState([]);
@@ -95,6 +96,7 @@ export default function CalendarCreate() {
 
     const { scheduleId, scheduleName, startDate, endDate } = location.state;
 
+    console.log(startDate)
     //fetches classrooms to dorpdown
     useEffect(() => {
         const loadClassrooms = async () => {
@@ -296,6 +298,15 @@ export default function CalendarCreate() {
         if (!isSalaDisponivel) return;
 
         //todo. aqui: lOGICA DE IR BUSCAR Á BASE DE DADOS!!
+        console.log(new Date(startDate).toISOString());
+        //1o ter uma lista
+        const overlapingBlocks = await fetchOverlappingBlocks({
+            start: new Date(startDate).toISOString(),  
+            end: new Date(endDate).toISOString()
+        });
+
+        console.log(overlapingBlocks);
+
         // Check if the selected room is already booked for this time slot
         const roomConflict = events.some((event) => {
             if (parseInt(event.id) === parseInt(selectedEvent.id)) return false;
@@ -402,8 +413,8 @@ export default function CalendarCreate() {
             subjectId: event.extendedProps.courseId,
             scheduleId: scheduleId,
             classroomId: event.extendedProps.room,
-            startHour: new Date(event.start).toTimeString().slice(0, 8),
-            endHour: new Date(event.end).toTimeString().slice(0, 8),
+            startHour: new Date(event.start).toISOString().replace('T', ' ').substring(0, 19),
+            endHour: new Date(event.end).toISOString().replace('T', ' ').substring(0, 19),
             createdBy: user.email,
             dayOfWeek: new Date(event.start).getDay()
         }));
