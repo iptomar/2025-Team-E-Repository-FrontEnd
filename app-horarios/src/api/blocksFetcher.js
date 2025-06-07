@@ -1,5 +1,3 @@
-blocks fetcher
-
 const API_BASE = import.meta.env.VITE_WS_URL;
 
 export const fetchOverlappingBlocks = async ({start, end}) => {
