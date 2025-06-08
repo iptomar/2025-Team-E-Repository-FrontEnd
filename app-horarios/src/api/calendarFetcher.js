@@ -98,19 +98,29 @@ export const createSchedule = async ({ courseId, name, startDate, endDate, curri
 };
 
 
-export const fetchUserSchedules = async (token) => {
-    const response = await fetch(`${API_BASE}/api/schedules/user/me`, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-    });
-    const data = await response.json();
-    if (!response.ok) {
-        throw new Error(data.message || 'Erro ao buscar calendários');
-    }
-    return data;
+export const fetchUserSchedules = async (token, page = 1, limit = 5, search = '') => {
+  const url = new URL(`${API_BASE}/api/schedules/user/me`);
+  url.searchParams.append('page', page);
+  url.searchParams.append('limit', limit);
+  if (search) url.searchParams.append('search', search);
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Erro ao buscar calendários');
+  }
+  
+  return {
+    schedules: data.items,
+    total: data.totalCount
+  };
 };
 
 // Add this function to your existing calendarFetcher.js file
