@@ -19,7 +19,8 @@ export default function CalendarListing() {
   const [itemsPerPage] = useState(5); // 5 schedules per page as requested on the Issue #86
 
   //search
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(''); // Name
+  const [selectedClass, setSelectedClass] = useState(''); // Class
 
   const handleOpenModal = () => {
     setCreateError(null);
@@ -61,6 +62,11 @@ export default function CalendarListing() {
 
     return () => clearTimeout(debounceTimer);
   }, [currentPage, searchTerm]);
+
+  // Reset pagination when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedClass]);
 
   const handleCreateCalendar = async ({
     courseId,
@@ -114,6 +120,17 @@ export default function CalendarListing() {
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ width: '250px', marginRight: '15px'}}
           />
+          <Form.Select
+            style={{ width: '200px', marginRight: '15px' }}
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value)}
+          >
+            <option value="">Filtrar por turma</option>
+            {[...new Set(calendars.map(c => c.Class))].filter(Boolean).map((cls, idx) => (
+              <option key={idx} value={cls}>{cls}</option>
+            ))}
+          </Form.Select>
+
         <Button variant="primary" onClick={handleOpenModal}>
           Criar novo horário
         </Button>
@@ -146,47 +163,50 @@ export default function CalendarListing() {
           Nenhum horário encontrado.
         </Alert>
       ) : (
+        
         <ListGroup>
-          {calendars.map(cal => (
-            <ListGroup.Item
-              key={cal.Id || cal.id}
-              className="d-flex justify-content-between align-items-center"
-              style={{ cursor: 'pointer' }}
-              onClick={() => handleViewSchedule(cal.Id || cal.id)}
-            >
-              <div>
-                <h5 className="mb-1">{cal.Name}</h5>
-                {cal.CourseName && (
-                  <small className="text-muted">({cal.CourseName})</small>
-                )}
-                <div className="mt-1">
-                  {cal.CurricularYear && (
-                    <div><strong>Ano Curricular:</strong> {cal.CurricularYear}</div>
+          {calendars
+            .filter(cal => selectedClass === '' || cal.Class === selectedClass)
+            .map(cal => (
+              <ListGroup.Item
+                key={cal.Id || cal.id}
+                className="d-flex justify-content-between align-items-center"
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleViewSchedule(cal.Id || cal.id)}
+              >
+                <div>
+                  <h5 className="mb-1">{cal.Name}</h5>
+                  {cal.CourseName && (
+                    <small className="text-muted">({cal.CourseName})</small>
                   )}
-                  {cal.Class && (
-                    <div><strong>Turma:</strong> {cal.Class}</div>
-                  )}
-                  <div>
-                    <small className="text-muted">
-                      Criado em: {new Date(cal.CreatedOn).toLocaleDateString('pt-PT')}
-                    </small>
+                  <div className="mt-1">
+                    {cal.CurricularYear && (
+                      <div><strong>Ano Curricular:</strong> {cal.CurricularYear}</div>
+                    )}
+                    {cal.Class && (
+                      <div><strong>Turma:</strong> {cal.Class}</div>
+                    )}
+                    <div>
+                      <small className="text-muted">
+                        Criado em: {new Date(cal.CreatedOn).toLocaleDateString('pt-PT')}
+                      </small>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div>
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleViewSchedule(cal.Id || cal.id);
-                  }}
-                >
-                  Ver Horário
-                </Button>
-              </div>
-            </ListGroup.Item>
-          ))}
+                <div>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewSchedule(cal.Id || cal.id);
+                    }}
+                  >
+                    Ver Horário
+                  </Button>
+                </div>
+              </ListGroup.Item>
+            ))}
         </ListGroup>
       )}
       {!loading && totalPages > 1 && (
