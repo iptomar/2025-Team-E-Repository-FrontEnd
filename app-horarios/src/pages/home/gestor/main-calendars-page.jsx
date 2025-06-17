@@ -34,34 +34,34 @@ export default function CalendarListing() {
   };
 
   useEffect(() => {
-    const loadCalendars = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('token');
-        const { schedules, total } = await fetchUserSchedules(
-          token, 
-          currentPage, 
-          itemsPerPage,
-          searchTerm
-        );
-        
-        setCalendars(schedules);
-        setTotalPages(Math.ceil(total / itemsPerPage));
-        setError(null);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadCalendars = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const { schedules, total } = await fetchUserSchedules(
+        token, 
+        currentPage, 
+        itemsPerPage,
+        searchTerm,
+        selectedClass 
+      );
+      
+      setCalendars(schedules);
+      setTotalPages(Math.ceil(total / itemsPerPage));
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // Add debounce to prevent excessive API calls
-    const debounceTimer = setTimeout(() => {
-      loadCalendars();
-    }, 300);
+  const debounceTimer = setTimeout(() => {
+    loadCalendars();
+  }, 300);
 
-    return () => clearTimeout(debounceTimer);
-  }, [currentPage, searchTerm]);
+  return () => clearTimeout(debounceTimer);
+}, [currentPage, searchTerm, selectedClass]);
 
   // Reset pagination when search term changes
   useEffect(() => {
@@ -126,9 +126,11 @@ export default function CalendarListing() {
             onChange={(e) => setSelectedClass(e.target.value)}
           >
             <option value="">Filtrar por turma</option>
-            {[...new Set(calendars.map(c => c.Class))].filter(Boolean).map((cls, idx) => (
-              <option key={idx} value={cls}>{cls}</option>
-            ))}
+            <option value="Turma A">Turma A</option>
+            <option value="Turma B">Turma B</option>
+            <option value="Turma C">Turma C</option>
+            <option value="Turma D">Turma D</option>
+            <option value="Turma E">Turma E</option>
           </Form.Select>
 
         <Button variant="primary" onClick={handleOpenModal}>
