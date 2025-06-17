@@ -98,12 +98,13 @@ export const createSchedule = async ({ courseId, name, startDate, endDate, curri
 };
 
 
-export const fetchUserSchedules = async (token, page = 1, limit = 5, search = '', turma = '') => {
+export const fetchUserSchedules = async (token, page = 1, limit = 5, search = '', turma = '', ano = '') => {
   const url = new URL(`${API_BASE}/api/schedules/user/me`);
   url.searchParams.append('page', page);
   url.searchParams.append('limit', limit);
   if (search) url.searchParams.append('search', search);
   if (turma) url.searchParams.append('class', turma);
+  if (ano) url.searchParams.append('curricularYear', ano);
 
   const response = await fetch(url, {
     method: 'GET',
@@ -124,20 +125,6 @@ export const fetchUserSchedules = async (token, page = 1, limit = 5, search = ''
   };
 };
 
-export const fetchUserScheduleClasses = async (token) => {
-  const response = await fetch(`${API_BASE}/api/schedules/by-class`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.message || 'Erro ao buscar turmas');
-  }
-  return data;
-};
 
 // Add this function to your existing calendarFetcher.js file
 export const fetchScheduleById = async (scheduleId, token) => {

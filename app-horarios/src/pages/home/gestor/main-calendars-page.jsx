@@ -21,6 +21,7 @@ export default function CalendarListing() {
   //search
   const [searchTerm, setSearchTerm] = useState(''); // Name
   const [selectedClass, setSelectedClass] = useState(''); // Class
+  const [selectedCurricularYear, setSelectedCurricularYear] = useState(''); // Curricular Year
 
   const handleOpenModal = () => {
     setCreateError(null);
@@ -43,7 +44,8 @@ export default function CalendarListing() {
         currentPage, 
         itemsPerPage,
         searchTerm,
-        selectedClass 
+        selectedClass,
+        selectedCurricularYear
       );
       
       setCalendars(schedules);
@@ -61,12 +63,12 @@ export default function CalendarListing() {
   }, 300);
 
   return () => clearTimeout(debounceTimer);
-}, [currentPage, searchTerm, selectedClass]);
+}, [currentPage, searchTerm, selectedClass, selectedCurricularYear]);
 
   // Reset pagination when search term changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedClass]);
+  }, [selectedClass, selectedCurricularYear, searchTerm]);
 
   const handleCreateCalendar = async ({
     courseId,
@@ -131,6 +133,17 @@ export default function CalendarListing() {
             <option value="Turma C">Turma C</option>
             <option value="Turma D">Turma D</option>
             <option value="Turma E">Turma E</option>
+          </Form.Select>
+
+          <Form.Select
+            style={{ width: '230px', marginRight: '15px' }}
+            value={selectedCurricularYear}
+            onChange={(e) => setSelectedCurricularYear(e.target.value)}
+          >
+            <option value="">Filtrar por Ano Curricular</option>
+            <option value="1º Ano">1º Ano</option>
+            <option value="2º Ano">2º Ano</option>
+            <option value="3º Ano">3º Ano</option>
           </Form.Select>
 
         <Button variant="primary" onClick={handleOpenModal}>
