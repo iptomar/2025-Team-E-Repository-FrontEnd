@@ -98,11 +98,13 @@ export const createSchedule = async ({ courseId, name, startDate, endDate, curri
 };
 
 
-export const fetchUserSchedules = async (token, page = 1, limit = 5, search = '') => {
+export const fetchUserSchedules = async (token, page = 1, limit = 5, search = '', turma = '', ano = '') => {
   const url = new URL(`${API_BASE}/api/schedules/user/me`);
   url.searchParams.append('page', page);
   url.searchParams.append('limit', limit);
   if (search) url.searchParams.append('search', search);
+  if (turma) url.searchParams.append('class', turma);
+  if (ano) url.searchParams.append('curricularYear', ano);
 
   const response = await fetch(url, {
     method: 'GET',
@@ -122,6 +124,7 @@ export const fetchUserSchedules = async (token, page = 1, limit = 5, search = ''
     total: data.totalCount
   };
 };
+
 
 // Add this function to your existing calendarFetcher.js file
 export const fetchScheduleById = async (scheduleId, token) => {
