@@ -1,6 +1,70 @@
-// Importa todos os estilos
-
 @use './variables' as *;
 @use './login.scss';
-// Atenção, o import do BS deve ser feito depois de todos os outros
-@import 'bootstrap/dist/css/bootstrap.min.css';
+
+// Cores
+$primary:   $primary-main-color;
+$secondary: $secondary-color;
+$light:     $light-BG-color;
+$body-bg:   $background-color;
+$body-color: $primary-text-color;
+
+$btn-primary-bg:         $primary-main-color;
+$btn-primary-border:     $primary-main-color;
+$btn-primary-hover-bg:   $hover-state-color;
+$btn-primary-hover-border: $hover-state-color;
+
+// Tipografia
+$font-family-base:        $font-family;
+$font-weight-light:       $font-light;
+$font-weight-normal:      $font-regular;
+$font-weight-semibold:    $font-semibold;
+$font-weight-bold:        $font-bold;
+
+$font-size-base:          1rem;
+$font-size-sm:            0.875rem;
+$font-size-lg:            1.25rem;
+$h1-font-size:            2.5rem;
+$h2-font-size:            2rem;
+// ⛔ remover ou reduzir o tamanho do botão:
+$btn-font-size:           1rem;
+
+// Espaçamentos
+$spacer: $medium-spacing;
+$spacers: (
+  0: 0,
+  1: $extra-small-spacing,
+  2: $small-spacing,
+  3: $medium-spacing,
+  4: $large-spacing,
+  5: $extra-large-spacing
+);
+
+// Radius
+$border-radius-sm:     $sm-border-radius;
+$border-radius:        $md-border-radius;
+$border-radius-lg:     $lg-border-radius;
+$border-radius-pill:   $full-border-radius;
+
+.icon-primary {
+  color: $primary-main-color;
+}
+
+// Bootstrap
+@import "bootstrap/scss/bootstrap";
+
+// Pós-bootstrap (custom properties de cor)
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-hover-color: #fff;
+}
+
+.btn-secondary {
+  --bs-btn-color: #fff;
+  --bs-btn-hover-color: #fff;
+}
+
+.btn-outline-primary:hover {
+  --bs-btn-color: #fff;
+  --bs-btn-hover-color: #fff;
+}
+

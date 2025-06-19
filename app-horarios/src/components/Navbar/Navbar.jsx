@@ -1,72 +1,83 @@
 ﻿import React from "react";
-import {useNavigate, useLocation} from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { Container } from "react-bootstrap";
+import { FiUser } from "react-icons/fi";
+import { FiLogOut } from "react-icons/fi"; // logout
+import { FaTools } from "react-icons/fa"; // admin/backoffice
+import { HiOutlineMail } from "react-icons/hi"; // email
 import iptLogo from "../../assets/ipt-logo-full.png";
 import "./Navbar.scss";
 import { useAuth } from "../../contexts/AuthContext.jsx";
-import {FULL_ROUTES} from "../../routes.jsx";
+import { FULL_ROUTES } from "../../routes.jsx";
 
 const Navbar = () => {
-    const { isAuthenticated } = useAuth();
-    const navigate = useNavigate();
-    const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user")) || {};
 
-    const user = JSON.parse(localStorage.getItem("user")) || {};
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate(FULL_ROUTES.LOGIN);
+  };
 
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate(FULL_ROUTES.LOGIN); // Redirect to login
-    };
+  const goToBackoffice = () => navigate(FULL_ROUTES.BACKOFFICE.HOME);
 
-    const getPageTitle = () => {
-        if (location.pathname.includes("/calendario")) {
-            return "Calendário";
-        } else if (location.pathname.includes("/home")) {
-            return "Meus horários";
-        } else {
-            return "Gestão de Horários";
-        }
-    };
+  if (!isAuthenticated) return null;
 
-    const goToBackoffice = () => {
-        navigate(FULL_ROUTES.BACKOFFICE.HOME);
-    };
+  return (
+    <nav className="navbar shadow-sm">
+      <Container className="d-flex justify-content-between align-items-center py-2">
+        {/* LOGO + LINK */}
+        <div className="navbar-left d-flex align-items-center gap-4">
+          <Link to={FULL_ROUTES.HOME}>
+            <img
+              src={iptLogo}
+              alt="IPT Logo"
+              className="navbar-logo"
+              style={{ cursor: "pointer", height: "40px" }}
+            />
+          </Link>
 
-    if (isAuthenticated) {
-        return (
-            <nav className="navbar">
-                <div className="navbar-left">
-                    <img src={iptLogo} alt="IPT Logo" className="navbar-logo" />
-                    <span className="navbar-title">{getPageTitle()}</span>
-                </div>
-                <div className="navbar-center">
-                    <ul className="navbar-links">
-                        <li><a href="/home">Meus horários</a></li>
-                    </ul>
-                </div>
-                <div className="navbar-right">
-                    {user && user.email && (
-                        <>
-                            {user.role === "Admin" ? (
-                                <span
-                                    className="navbar-email navbar-email--link"
-                                    onClick={goToBackoffice}
-                                    style={{ cursor: "pointer", textDecoration: "underline" }}
-                                >
-                                    {user.email}
-                                </span>
-                            ) : (
-                                <span className="navbar-email">{user.email}</span>
-                            )}
-                            <button className="navbar-logout" onClick={handleLogout}>Logout</button>
-                        </>
-                    )}
-                </div>
-            </nav>
-        );
-    }
+          <Link
+            to={FULL_ROUTES.HOME}
+            className="navbar-link fw-semibold text-decoration-none text-primary"
+          >
+            Horários
+          </Link>
+        </div>
 
-    return null;
+        {/* PERFIL / LOGOUT */}
+        <div className="navbar-right d-flex align-items-center gap-3">
+          {user?.email && (
+            <>
+              <span className="navbar-email d-flex align-items-center gap-2">
+                <FiUser className="text-primary" />
+                <span className="fw-semibold text-muted">Bem-vindo,</span>
+                <span className="fw-bold text-dark">{user.email}</span>
+              </span>
+
+              {user.role === "Admin" && (
+                <button
+                  className="btn btn-outline-secondary d-flex align-items-center gap-1"
+                  onClick={goToBackoffice}
+                >
+                  <FaTools /> Backoffice
+                </button>
+              )}
+
+              <button
+                className="btn btn-outline-danger d-flex align-items-center gap-1"
+                onClick={handleLogout}
+              >
+                <FiLogOut /> Logout
+              </button>
+            </>
+          )}
+        </div>
+      </Container>
+    </nav>
+  );
 };
 
 export default Navbar;

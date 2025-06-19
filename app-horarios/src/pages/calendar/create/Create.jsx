@@ -3,7 +3,6 @@ import { Container, Row, Col, Card, Button, Form, Alert, Badge, } from "react-bo
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import "bootstrap/dist/css/bootstrap.min.css";
 import Modal from "react-bootstrap/Modal";
 import "./Create.scss";
 import { fetchSubjectsWithProfessors } from "../../../api/courseFetcher.js";

@@ -8,7 +8,6 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { fetchScheduleById } from '../../../api/calendarFetcher';
 import { fetchClassrooms } from '../../../api/classroomFetcher';
 import { fetchSubjectsWithProfessors } from '../../../api/courseFetcher';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import './View.scss';
 
 const CalendarView = () => {

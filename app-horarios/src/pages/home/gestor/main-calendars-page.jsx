@@ -1,8 +1,32 @@
-import { useEffect, useState } from 'react';
-import { Button, Container, ListGroup, Spinner, Alert, Pagination, Form} from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import CreateCalendarModal from '../../../components/Calendar/CreateCalendarModal';
-import { createSchedule, fetchUserSchedules } from '../../../api/calendarFetcher';
+import { useEffect, useState } from "react";
+import {
+  Button,
+  Container,
+  ListGroup,
+  Spinner,
+  Alert,
+  Pagination,
+  Form,
+  Card,
+  OverlayTrigger,
+  Tooltip,
+} from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import {
+  FiPlus,
+  FiEye,
+} from "react-icons/fi";
+import {
+  FaChalkboardTeacher,
+  FaCalendarAlt,
+  FaGraduationCap,
+  FaBook
+} from "react-icons/fa";
+import CreateCalendarModal from "../../../components/Calendar/CreateCalendarModal";
+import {
+  createSchedule,
+  fetchUserSchedules,
+} from "../../../api/calendarFetcher";
 import { FULL_ROUTES } from "../../../routes.jsx";
 
 export default function CalendarListing() {
@@ -13,15 +37,13 @@ export default function CalendarListing() {
   const [showModal, setShowModal] = useState(false);
   const [createError, setCreateError] = useState(null);
 
-  //pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [itemsPerPage] = useState(5); // 5 schedules per page as requested on the Issue #86
+  const [itemsPerPage] = useState(5);
 
-  //search
-  const [searchTerm, setSearchTerm] = useState(''); // Name
-  const [selectedClass, setSelectedClass] = useState(''); // Class
-  const [selectedCurricularYear, setSelectedCurricularYear] = useState(''); // Curricular Year
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedCurricularYear, setSelectedCurricularYear] = useState("");
 
   const handleOpenModal = () => {
     setCreateError(null);
@@ -35,37 +57,36 @@ export default function CalendarListing() {
   };
 
   useEffect(() => {
-  const loadCalendars = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const { schedules, total } = await fetchUserSchedules(
-        token, 
-        currentPage, 
-        itemsPerPage,
-        searchTerm,
-        selectedClass,
-        selectedCurricularYear
-      );
-      
-      setCalendars(schedules);
-      setTotalPages(Math.ceil(total / itemsPerPage));
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const loadCalendars = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        const { schedules, total } = await fetchUserSchedules(
+          token,
+          currentPage,
+          itemsPerPage,
+          searchTerm,
+          selectedClass,
+          selectedCurricularYear
+        );
 
-  const debounceTimer = setTimeout(() => {
-    loadCalendars();
-  }, 300);
+        setCalendars(schedules);
+        setTotalPages(Math.ceil(total / itemsPerPage));
+        setError(null);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  return () => clearTimeout(debounceTimer);
-}, [currentPage, searchTerm, selectedClass, selectedCurricularYear]);
+    const debounceTimer = setTimeout(() => {
+      loadCalendars();
+    }, 300);
 
-  // Reset pagination when search term changes
+    return () => clearTimeout(debounceTimer);
+  }, [currentPage, searchTerm, selectedClass, selectedCurricularYear]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedClass, selectedCurricularYear, searchTerm]);
@@ -76,10 +97,10 @@ export default function CalendarListing() {
     startDate,
     endDate,
     curricularYear,
-    class: className
+    class: className,
   }) => {
     if (new Date(endDate) < new Date(startDate)) {
-      setCreateError('A data de fim não pode ser anterior à data de início.');
+      setCreateError("A data de fim não pode ser anterior à data de início.");
       return;
     }
 
@@ -90,7 +111,7 @@ export default function CalendarListing() {
         startDate,
         endDate,
         curricularYear,
-        class: className
+        class: className,
       });
 
       setCurrentPage(1);
@@ -102,56 +123,70 @@ export default function CalendarListing() {
           startDate,
           endDate,
           curricularYear,
-          class: className
-        }
+          class: className,
+        },
       });
     } catch (error) {
-      const message = error?.message || 'Falha ao criar o calendário. Tente novamente.';
+      const message = error?.message || "Falha ao criar o calendário. Tente novamente.";
       setCreateError(message);
     }
   };
 
+  const renderWithTooltip = (icon, tooltip, value) => (
+    <OverlayTrigger placement="top" overlay={<Tooltip>{tooltip}</Tooltip>}>
+      <div className="d-flex align-items-center gap-2">
+        {icon} <span>{value}</span>
+      </div>
+    </OverlayTrigger>
+  );
+
+  const renderTextWithTooltip = (text, tooltip) => (
+    <OverlayTrigger placement="top" overlay={<Tooltip>{tooltip}</Tooltip>}>
+      <span>{text}</span>
+    </OverlayTrigger>
+  );
+
   return (
     <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4 mt-4">
-        <div className="d-flex align-items-center">
-          <Form.Control
-            type="text"
-            placeholder="Pesquisar por nome..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: '250px', marginRight: '15px'}}
-          />
-          <Form.Select
-            style={{ width: '200px', marginRight: '15px' }}
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-          >
-            <option value="">Filtrar por turma</option>
-            <option value="Turma A">Turma A</option>
-            <option value="Turma B">Turma B</option>
-            <option value="Turma C">Turma C</option>
-            <option value="Turma D">Turma D</option>
-            <option value="Turma E">Turma E</option>
-          </Form.Select>
+      <Card className="p-3 my-4">
+        <div className="d-flex justify-content-between align-items-center">
+          <div className="d-flex align-items-center flex-wrap gap-2">
+            <Form.Control
+              type="text"
+              placeholder="Pesquisar por nome..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ width: "250px" }}
+            />
+            <Form.Select
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+              style={{ width: "200px" }}
+            >
+              <option value="">Filtrar por turma</option>
+              <option value="Turma A">Turma A</option>
+              <option value="Turma B">Turma B</option>
+              <option value="Turma C">Turma C</option>
+              <option value="Turma D">Turma D</option>
+              <option value="Turma E">Turma E</option>
+            </Form.Select>
+            <Form.Select
+              value={selectedCurricularYear}
+              onChange={(e) => setSelectedCurricularYear(e.target.value)}
+              style={{ width: "230px" }}
+            >
+              <option value="">Filtrar por Ano Curricular</option>
+              <option value="1º Ano">1º Ano</option>
+              <option value="2º Ano">2º Ano</option>
+              <option value="3º Ano">3º Ano</option>
+            </Form.Select>
+          </div>
 
-          <Form.Select
-            style={{ width: '230px', marginRight: '15px' }}
-            value={selectedCurricularYear}
-            onChange={(e) => setSelectedCurricularYear(e.target.value)}
-          >
-            <option value="">Filtrar por Ano Curricular</option>
-            <option value="1º Ano">1º Ano</option>
-            <option value="2º Ano">2º Ano</option>
-            <option value="3º Ano">3º Ano</option>
-          </Form.Select>
-
-        <Button variant="primary" onClick={handleOpenModal}>
-          Criar novo horário
-        </Button>
+          <Button variant="primary" onClick={handleOpenModal} className="d-flex align-items-center gap-2">
+            <FiPlus /> Criar novo horário
+          </Button>
         </div>
-      </div>
-
+      </Card>
 
       {createError && (
         <Alert variant="danger" onClose={() => setCreateError(null)} dismissible>
@@ -170,42 +205,29 @@ export default function CalendarListing() {
           <Spinner animation="border" />
         </div>
       ) : error ? (
-        <Alert variant="danger">
-          Erro ao carregar horários: {error}
-        </Alert>
+        <Alert variant="danger">Erro ao carregar horários: {error}</Alert>
       ) : calendars.length === 0 ? (
-        <Alert variant="info">
-          Nenhum horário encontrado.
-        </Alert>
+        <Alert variant="info">Nenhum horário encontrado.</Alert>
       ) : (
-        
         <ListGroup>
           {calendars
-            .filter(cal => selectedClass === '' || cal.Class === selectedClass)
-            .map(cal => (
+            .filter((cal) => selectedClass === "" || cal.Class === selectedClass)
+            .map((cal) => (
               <ListGroup.Item
                 key={cal.Id || cal.id}
-                className="d-flex justify-content-between align-items-center"
-                style={{ cursor: 'pointer' }}
+                className="d-flex justify-content-between align-items-center gap-3"
+                style={{ cursor: "pointer" }}
                 onClick={() => handleViewSchedule(cal.Id || cal.id)}
               >
                 <div>
-                  <h5 className="mb-1">{cal.Name}</h5>
-                  {cal.CourseName && (
-                    <small className="text-muted">({cal.CourseName})</small>
-                  )}
-                  <div className="mt-1">
-                    {cal.CurricularYear && (
-                      <div><strong>Ano Curricular:</strong> {cal.CurricularYear}</div>
-                    )}
-                    {cal.Class && (
-                      <div><strong>Turma:</strong> {cal.Class}</div>
-                    )}
-                    <div>
-                      <small className="text-muted">
-                        Criado em: {new Date(cal.CreatedOn).toLocaleDateString('pt-PT')}
-                      </small>
-                    </div>
+                  <h5 className="mb-1 d-flex align-items-center gap-2">
+                    <FaCalendarAlt className="icon-primary"/> {renderTextWithTooltip(cal.Name, "Nome do horário")}
+                  </h5>
+                  <div className="mt-2 d-flex flex-row flex-wrap gap-4">
+                    {renderWithTooltip(<FaGraduationCap className="icon-primary" />, "Ano Curricular", cal.CurricularYear)}
+                    {renderWithTooltip(<FaChalkboardTeacher className="icon-primary" />, "Turma", cal.Class)}
+                    {renderWithTooltip(<FaBook className="icon-primary"/>, "Curso", cal.CourseName)}
+                    {renderWithTooltip(<FaCalendarAlt className="icon-primary"/>, "Data de criação", new Date(cal.CreatedOn).toLocaleDateString("pt-PT"))}
                   </div>
                 </div>
                 <div>
@@ -216,24 +238,25 @@ export default function CalendarListing() {
                       e.stopPropagation();
                       handleViewSchedule(cal.Id || cal.id);
                     }}
+                    className="d-flex align-items-center gap-2"
                   >
-                    Ver Horário
+                    <FiEye /> Ver
                   </Button>
                 </div>
               </ListGroup.Item>
             ))}
         </ListGroup>
       )}
+
       {!loading && totalPages > 1 && (
         <div className="d-flex justify-content-center mt-4">
           <Pagination>
-            <Pagination.Prev 
-              disabled={currentPage === 1} 
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+            <Pagination.Prev
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             />
-            
+
             {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              // Calculate page numbers to show
               let startPage;
               if (totalPages <= 5) {
                 startPage = 1;
@@ -244,7 +267,7 @@ export default function CalendarListing() {
               } else {
                 startPage = currentPage - 2;
               }
-              
+
               const pageNumber = startPage + i;
               return (
                 <Pagination.Item
@@ -256,10 +279,12 @@ export default function CalendarListing() {
                 </Pagination.Item>
               );
             })}
-            
-            <Pagination.Next 
-              disabled={currentPage === totalPages} 
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+
+            <Pagination.Next
+              disabled={currentPage === totalPages}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
             />
           </Pagination>
         </div>
