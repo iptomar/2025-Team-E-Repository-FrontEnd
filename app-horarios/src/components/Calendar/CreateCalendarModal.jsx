@@ -31,7 +31,7 @@ const CreateCalendarModal = ({ show, onHide, onSubmit }) => {
       startDate,
       endDate,
       curricularYear,
-      class: className
+      class: className,
     });
     onHide();
 
