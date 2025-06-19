@@ -30,13 +30,17 @@ const API_BASE = import.meta.env.VITE_WS_URL;
  * const subjects = await fetchSubjectsWithProfessors();
  * console.log(subjects[0].Subject); // "Networking II"
  */
-export const fetchSubjectsWithProfessors = async () => {
-    const response = await axios.get(`${API_BASE}/api/admin/subjects-professors`, {
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-    });
-    return response.data;
+export const fetchSubjectsWithProfessors = async (year) => {
+  const url = new URL(`${API_BASE}/api/admin/subjects-professors`);
+  if (year) url.searchParams.append('year', year); // já espera o valor tipo "1º Ano"
+
+  const response = await axios.get(url.toString(), {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+
+  return response.data;
 };
 
 

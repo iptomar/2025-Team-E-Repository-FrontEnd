@@ -128,35 +128,38 @@ export default function CalendarCreate() {
     }, []);
 
     useEffect(() => {
-        const loadCourses = async () => {
-            setLoadingCourses(true);
-            setCoursesError(null);
-            try {
-                const data = await fetchSubjectsWithProfessors();
-                const colorPalette = [
-                    "#b25d31",
-                    "#5d9b42",
-                    "#4285f4",
-                    "#aa46bb",
-                    "#f4b400",
-                ];
-                const transformed = data.map((subject, index) => ({
-                    id: subject.Id,
-                    name: subject.Subject,
-                    professor: subject.Professor,
-                    allocatedHours: 0,
-                    type: subject.Tipologia,
-                    color: colorPalette[index % colorPalette.length],
-                }));
-                setCourses(transformed);
-            } catch (err) {
-                setCoursesError(err.message || "Erro ao retornar cadeiras");
-            } finally {
-                setLoadingCourses(false);
-            }
-        };
-        loadCourses();
-    }, []);
+    const loadCourses = async () => {
+        setLoadingCourses(true);
+        setCoursesError(null);
+        try {
+            const curricularYear = location.state?.curricularYear;
+            const data = await fetchSubjectsWithProfessors(curricularYear);
+            console.log("teste" , curricularYear);
+
+            const colorPalette = [
+                "#b25d31",
+                "#5d9b42",
+                "#4285f4",
+                "#aa46bb",
+                "#f4b400",
+            ];
+            const transformed = data.map((subject, index) => ({
+                id: subject.Id,
+                name: subject.Subject,
+                professor: subject.Professor,
+                allocatedHours: 0,
+                type: subject.Tipologia,
+                color: colorPalette[index % colorPalette.length],
+            }));
+            setCourses(transformed);
+        } catch (err) {
+            setCoursesError(err.message || "Erro ao retornar cadeiras");
+        } finally {
+            setLoadingCourses(false);
+        }
+    };
+    loadCourses();
+}, [location.state?.curricularYear]); // 👈 depende do ano curricular
 
     // Check if the schedule is complete
     useEffect(() => {
