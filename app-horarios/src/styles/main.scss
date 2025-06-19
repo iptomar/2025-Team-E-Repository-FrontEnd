@@ -7,6 +7,9 @@ $secondary: $secondary-color;
 $light:     $light-BG-color;
 $body-bg:   $background-color;
 $body-color: $primary-text-color;
+$alert-color: $alert-color;
+$alert-bg: $alert-BG-color;
+$alert-border: darken($alert-BG-color, 5%);
 
 $btn-primary-bg:         $primary-main-color;
 $btn-primary-border:     $primary-main-color;
@@ -66,5 +69,12 @@ $border-radius-pill:   $full-border-radius;
 .btn-outline-primary:hover {
   --bs-btn-color: #fff;
   --bs-btn-hover-color: #fff;
+}
+
+.alert-info {
+  --bs-alert-color:     #{$alert-color};
+  --bs-alert-bg:        #{$alert-BG-color};
+  --bs-alert-border-color: darken(#{$alert-BG-color}, 5%);
+  --bs-alert-link-color: #{$alert-color};
 }
 

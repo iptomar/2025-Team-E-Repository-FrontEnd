@@ -1,5 +1,24 @@
 ﻿const API_BASE = import.meta.env.VITE_WS_URL;
 
+
+// Fetch all the courses that a user has
+export const fetchUserCourses = async (token) => {
+  const response = await fetch(`${API_BASE}/api/schedules/user/courses`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Erro ao buscar cursos");
+  }
+  // data = [{ id, name }]
+  return data;
+};
+
+
 // Fetch all events for the current user/semester
 export const fetchEvents = async (token) => {
     const response = await fetch(`${API_BASE}/api/calendar/events`, {
@@ -98,30 +117,38 @@ export const createSchedule = async ({ courseId, name, startDate, endDate, curri
 };
 
 
-export const fetchUserSchedules = async (token, page = 1, limit = 5, search = '', turma = '', ano = '') => {
+export const fetchUserSchedules = async (
+  token,
+  page = 1,
+  limit = 5,
+  search = "",
+  turma = "",
+  ano = "",
+  courseId = ""         
+) => {
   const url = new URL(`${API_BASE}/api/schedules/user/me`);
-  url.searchParams.append('page', page);
-  url.searchParams.append('limit', limit);
-  if (search) url.searchParams.append('search', search);
-  if (turma) url.searchParams.append('class', turma);
-  if (ano) url.searchParams.append('curricularYear', ano);
+  url.searchParams.append("page", page);
+  url.searchParams.append("limit", limit);
+  if (search) url.searchParams.append("search", search);
+  if (turma)  url.searchParams.append("class", turma);
+  if (ano)    url.searchParams.append("curricularYear", ano);
+  if (courseId) url.searchParams.append("course", courseId); // <— aqui
 
   const response = await fetch(url, {
-    method: 'GET',
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
   });
-  
+
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.message || 'Erro ao buscar calendários');
+    throw new Error(data.message || "Erro ao buscar calendários");
   }
-  
+
   return {
     schedules: data.items,
-    total: data.totalCount
+    total: data.totalCount,
   };
 };
 

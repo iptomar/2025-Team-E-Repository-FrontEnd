@@ -26,12 +26,14 @@ import CreateCalendarModal from "../../../components/Calendar/CreateCalendarModa
 import {
   createSchedule,
   fetchUserSchedules,
+  fetchUserCourses,
 } from "../../../api/calendarFetcher";
 import { FULL_ROUTES } from "../../../routes.jsx";
 
 export default function CalendarListing() {
   const navigate = useNavigate();
   const [calendars, setCalendars] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -44,6 +46,7 @@ export default function CalendarListing() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedCurricularYear, setSelectedCurricularYear] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState("");
 
   const handleOpenModal = () => {
     setCreateError(null);
@@ -67,7 +70,8 @@ export default function CalendarListing() {
           itemsPerPage,
           searchTerm,
           selectedClass,
-          selectedCurricularYear
+          selectedCurricularYear,
+          selectedCourse
         );
 
         setCalendars(schedules);
@@ -85,11 +89,25 @@ export default function CalendarListing() {
     }, 300);
 
     return () => clearTimeout(debounceTimer);
-  }, [currentPage, searchTerm, selectedClass, selectedCurricularYear]);
+  }, [currentPage, searchTerm, selectedClass, selectedCurricularYear, selectedCourse]);
+
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const data = await fetchUserCourses(token);
+        setCourses(data);
+      } catch (err) {
+        console.error("Erro ao carregar cursos:", err.message);
+      }
+    };
+
+    loadCourses();
+  }, []);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedClass, selectedCurricularYear, searchTerm]);
+  }, [selectedClass, selectedCurricularYear, selectedCourse, searchTerm]);
 
   const handleCreateCalendar = async ({
     courseId,
@@ -180,6 +198,16 @@ export default function CalendarListing() {
               <option value="2º Ano">2º Ano</option>
               <option value="3º Ano">3º Ano</option>
             </Form.Select>
+            <Form.Select
+              value={selectedCourse}
+              onChange={(e) => setSelectedCourse(e.target.value)}
+              style={{ width: "250px" }}
+            >
+              <option value="">Filtrar por Curso</option>
+              {courses.map((course) => (
+                <option key={course.id} value={course.id}>{course.name}</option>
+              ))}
+            </Form.Select>
           </div>
 
           <Button variant="primary" onClick={handleOpenModal} className="d-flex align-items-center gap-2">
@@ -210,41 +238,39 @@ export default function CalendarListing() {
         <Alert variant="info">Nenhum horário encontrado.</Alert>
       ) : (
         <ListGroup>
-          {calendars
-            .filter((cal) => selectedClass === "" || cal.Class === selectedClass)
-            .map((cal) => (
-              <ListGroup.Item
-                key={cal.Id || cal.id}
-                className="d-flex justify-content-between align-items-center gap-3"
-                style={{ cursor: "pointer" }}
-                onClick={() => handleViewSchedule(cal.Id || cal.id)}
-              >
-                <div>
-                  <h5 className="mb-1 d-flex align-items-center gap-2">
-                    <FaCalendarAlt className="icon-primary"/> {renderTextWithTooltip(cal.Name, "Nome do horário")}
-                  </h5>
-                  <div className="mt-2 d-flex flex-row flex-wrap gap-4">
-                    {renderWithTooltip(<FaGraduationCap className="icon-primary" />, "Ano Curricular", cal.CurricularYear)}
-                    {renderWithTooltip(<FaChalkboardTeacher className="icon-primary" />, "Turma", cal.Class)}
-                    {renderWithTooltip(<FaBook className="icon-primary"/>, "Curso", cal.CourseName)}
-                    {renderWithTooltip(<FaCalendarAlt className="icon-primary"/>, "Data de criação", new Date(cal.CreatedOn).toLocaleDateString("pt-PT"))}
-                  </div>
+          {calendars.map((cal) => (
+            <ListGroup.Item
+              key={cal.Id || cal.id}
+              className="d-flex justify-content-between align-items-center gap-3"
+              style={{ cursor: "pointer" }}
+              onClick={() => handleViewSchedule(cal.Id || cal.id)}
+            >
+              <div>
+                <h5 className="mb-1 d-flex align-items-center gap-2">
+                  <FaCalendarAlt className="icon-primary"/> {renderTextWithTooltip(cal.Name, "Nome do horário")}
+                </h5>
+                <div className="mt-2 d-flex flex-row flex-wrap gap-4">
+                  {renderWithTooltip(<FaGraduationCap className="icon-primary" />, "Ano Curricular", cal.CurricularYear)}
+                  {renderWithTooltip(<FaChalkboardTeacher className="icon-primary" />, "Turma", cal.Class)}
+                  {renderWithTooltip(<FaBook className="icon-primary"/>, "Curso", cal.CourseName)}
+                  {renderWithTooltip(<FaCalendarAlt className="icon-primary"/>, "Data de criação", new Date(cal.CreatedOn).toLocaleDateString("pt-PT"))}
                 </div>
-                <div>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleViewSchedule(cal.Id || cal.id);
-                    }}
-                    className="d-flex align-items-center gap-2"
-                  >
-                    <FiEye /> Ver
-                  </Button>
-                </div>
-              </ListGroup.Item>
-            ))}
+              </div>
+              <div>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewSchedule(cal.Id || cal.id);
+                  }}
+                  className="d-flex align-items-center gap-2"
+                >
+                  <FiEye /> Ver
+                </Button>
+              </div>
+            </ListGroup.Item>
+          ))}
         </ListGroup>
       )}
 
