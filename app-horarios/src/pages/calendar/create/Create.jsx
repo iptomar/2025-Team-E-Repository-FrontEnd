@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef, Fragment } from "react";
-import { Container, Row, Col, Card, Button, Form, Alert, Badge, } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Form, Alert, Badge, OverlayTrigger,Tooltip} from "react-bootstrap";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -12,6 +12,12 @@ import { FULL_ROUTES } from "../../../routes.jsx";
 import { fetchClassrooms } from "../../../api/classroomFetcher.js";
 import { fetchOverlappingBlocks } from "../../../api/blocksFetcher.js";
 import { io } from "socket.io-client";
+import {
+  FaGraduationCap,
+  FaChalkboardTeacher,
+  FaCalendarPlus,
+  FaCalendarCheck,
+} from "react-icons/fa";
 
 /**
  * CalendarCreate Component
@@ -39,6 +45,9 @@ export default function CalendarCreate() {
         newSocket.disconnect();
         };
     }, []);
+
+
+ 
 
 
     // State for courses.jsx and their required hours
@@ -94,6 +103,14 @@ export default function CalendarCreate() {
     const location = useLocation();
 
     const { scheduleId, scheduleName, startDate, endDate } = location.state;
+
+ const renderWithTooltip = (icon, tooltip, value) => (
+    <OverlayTrigger placement="top" overlay={<Tooltip>{tooltip}</Tooltip>}>
+      <span className="d-flex align-items-center gap-2">
+        {icon} {value}
+      </span>
+    </OverlayTrigger>
+  );
 
     console.log(startDate)
     //fetches classrooms to dorpdown
@@ -460,26 +477,30 @@ export default function CalendarCreate() {
     }
 
     return (
-        <Container fluid className="mainContainer">
-            <h2 className="headerText text-center">
-                Plataforma de Gestão de Horários
-            </h2>
-            <div className="schedule-info mb-4 p-3 bg-light rounded text-center">
-                <h4 className="mb-1">{scheduleName}</h4>
-                <p className="mb-0">
-                    Período: {startDate} a {endDate}
-                </p>
-                {location.state?.curricularYear && (
-                    <p className="mb-0">
-                        <strong>Ano Curricular:</strong> {location.state.curricularYear}
-                    </p>
-                )}
-                {location.state?.class && (
-                    <p className="mb-0">
-                        <strong>Turma:</strong> {location.state.class}
-                    </p>
-                )}
-            </div>
+       <Container fluid className="mainContainer">
+      <h2 className="headerText text-center">Plataforma de Gestão de Horários</h2>
+
+      <div className="schedule-info mb-4 p-3 bg-light rounded text-center">
+        <h4 className="mb-1">{scheduleName}</h4>
+        <p className="mb-0">Horário Semanal – Criação</p>
+        <div className="d-flex justify-content-center flex-wrap gap-4 mt-2 fw-medium">
+          {location.state?.curricularYear &&
+            renderWithTooltip(
+              <FaGraduationCap className="icon-primary" />, "Ano Curricular", location.state.curricularYear
+            )}
+          {location.state?.class &&
+            renderWithTooltip(
+              <FaChalkboardTeacher className="icon-primary" />, "Turma", location.state.class
+            )}
+          {renderWithTooltip(
+            <FaCalendarPlus className="icon-primary" />, "Data de início", new Date(startDate).toLocaleDateString("pt-PT")
+          )}
+          {renderWithTooltip(
+            <FaCalendarCheck className="icon-primary" />, "Data de fim", new Date(endDate).toLocaleDateString("pt-PT")
+          )}
+        </div>
+      </div>
+
 
             {message.text && (
                 <Alert

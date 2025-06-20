@@ -7,127 +7,107 @@ import {
   Button,
   Alert,
   Spinner,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import {
+  FaCalendarAlt,
+  FaCalendarPlus,
+  FaCalendarCheck,
+  FaGraduationCap,
+  FaChalkboardTeacher,
+} from "react-icons/fa";
 import { fetchScheduleById } from "../../../api/calendarFetcher";
 import { fetchClassrooms } from "../../../api/classroomFetcher";
 import { fetchSubjectsWithProfessors } from "../../../api/courseFetcher";
 import "./View.scss";
 
-const CalendarView = () => {
+/* ---------------------------------------------------- */
+/*  Helpers                                             */
+/* ---------------------------------------------------- */
+const tipologyColor = (t) =>
+  t === "Teorico"         ? "#b25d31" :
+  t === "Pratica"         ? "#5d9b42" :
+  t === "Teorico-Pratica" ? "#4285f4" : "#aa46bb";
+
+const weekStartOf = (d) => {
+  const date = new Date(d);
+  const diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
+  return new Date(date.setDate(diff));
+};
+
+const withTooltip = (icon, tip, value) => (
+  <OverlayTrigger placement="top" overlay={<Tooltip>{tip}</Tooltip>} key={tip}>
+    <span className="d-flex align-items-center gap-2">
+      {icon} {value}
+    </span>
+  </OverlayTrigger>
+);
+
+/* ---------------------------------------------------- */
+/*  Component                                           */
+/* ---------------------------------------------------- */
+export default function CalendarView() {
   const { scheduleId } = useParams();
   const navigate = useNavigate();
 
-  const [schedule, setSchedule] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [events, setEvents] = useState([]);
+  const [schedule, setSchedule]   = useState(null);
+  const [events, setEvents]       = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
 
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-
+  /* ------------------ Fetch ------------------ */
   useEffect(() => {
-    const getWeekStart = (date) => {
-      const d = new Date(date);
-      const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(d.setDate(diff));
-    };
-
-    const getColorByTipologia = (tipologia) => {
-      switch (tipologia) {
-        case "Teorico":
-          return "#b25d31";
-        case "Pratica":
-          return "#5d9b42";
-        case "Teorico-Pratica":
-          return "#4285f4";
-        default:
-          return "#aa46bb";
-      }
-    };
-
-    const transformBlocksToEvents = (blocks, classrooms, subjects) => {
-      if (!blocks) return [];
-
-      const weekStart = getWeekStart(new Date());
-
-      return blocks.map((block) => {
-        const subject = subjects.find((s) => s.Id === block.SubjectFK);
-        const classroom = classrooms.find((c) => c.Id === block.ClassroomFK);
-
-        const dayOfWeek = block.DayOfWeek || 1;
-        const eventDate = new Date(weekStart);
-        eventDate.setDate(weekStart.getDate() + (dayOfWeek - 1));
-
-        const startDateTime = new Date(block.StartHour);
-        const endDateTime = new Date(block.EndHour);
-
-        // Usa apenas as horas e minutos dos blocos (ignorando a data deles)
-        const [startHour, startMinute] = [
-          startDateTime.getHours(),
-          startDateTime.getMinutes(),
-        ];
-        const [endHour, endMinute] = [
-          endDateTime.getHours(),
-          endDateTime.getMinutes(),
-        ];
-
-        const start = new Date(eventDate);
-        start.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
-
-        const end = new Date(eventDate);
-        end.setHours(parseInt(endHour), parseInt(endMinute), 0, 0);
-
-        return {
-          id: block.Id,
-          title: `${block.SubjectName} - ${
-            block.ClassroomName || "Sem sala"
-          } - ${subject?.Professor || "N/A"}`,
-          start: start,
-          end: end,
-          allDay: false,
-          extendedProps: {
-            professor: subject?.Professor || "N/A",
-            classroom:
-              block.ClassroomName ||
-              classroom?.Name ||
-              `Sala ${block.ClassroomFK}`,
-            tipologia: subject?.Tipologia || "N/A",
-            dayOfWeek: dayOfWeek,
-          },
-          backgroundColor: getColorByTipologia(subject?.Tipologia),
-          borderColor: getColorByTipologia(subject?.Tipologia),
-        };
-      });
-    };
-
-    const fetchAllData = async () => {
+    const fetchAll = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
-        const scheduleData = await fetchScheduleById(scheduleId, token);
-        const classroomsData = await fetchClassrooms();
-        const subjectsData = await fetchSubjectsWithProfessors(
-          scheduleData.CurricularYear
-        ); // <-- aqui
+        const token      = localStorage.getItem("token");
+        const sched      = await fetchScheduleById(scheduleId, token);
+        const classrooms = await fetchClassrooms();
+        const subjects   = await fetchSubjectsWithProfessors(
+          sched.CurricularYear
+        );
 
-        setSchedule(scheduleData);
-        setStartDate(scheduleData.StartDate);
-        setEndDate(scheduleData.EndDate);
+        /* blocks → events */
+        const startWeek = weekStartOf(new Date());
+        const evts = sched.blocks?.map((b) => {
+          const subj = subjects.find((s) => s.Id === b.SubjectFK);
+          const room = classrooms.find((c) => c.Id === b.ClassroomFK);
 
-        if (scheduleData?.blocks) {
-          const calendarEvents = transformBlocksToEvents(
-            scheduleData.blocks,
-            classroomsData,
-            subjectsData
-          );
-          setEvents(calendarEvents);
-        }
+          const dow      = b.DayOfWeek ?? 1;
+          const baseDate = new Date(startWeek);
+          baseDate.setDate(startWeek.getDate() + (dow - 1));
+
+          const [sh, sm] = new Date(b.StartHour).toTimeString().split(":");
+          const [eh, em] = new Date(b.EndHour).toTimeString().split(":");
+
+          const start = new Date(baseDate);
+          start.setHours(+sh, +sm, 0, 0);
+          const end   = new Date(baseDate);
+          end.setHours(+eh, +em, 0, 0);
+
+          return {
+            id: b.Id,
+            title: `${b.SubjectName} - ${b.ClassroomName || room?.Name || "Sem sala"} - ${subj?.Professor || "N/A"}`,
+            start,
+            end,
+            backgroundColor: tipologyColor(subj?.Tipologia),
+            borderColor:     tipologyColor(subj?.Tipologia),
+            extendedProps: {
+              professor: subj?.Professor || "N/A",
+              classroom: b.ClassroomName || room?.Name || `Sala ${b.ClassroomFK}`,
+              tipologia: subj?.Tipologia || "N/A",
+            },
+          };
+        }) ?? [];
+
+        setSchedule(sched);
+        setEvents(evts);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -135,58 +115,14 @@ const CalendarView = () => {
       }
     };
 
-    fetchAllData();
+    fetchAll();
   }, [scheduleId]);
 
-  function renderEventContent(eventInfo) {
-    return (
-      <>
-        <b>{eventInfo.timeText}</b>
-        <i>{eventInfo.event.title}</i>
-      </>
-    );
-  }
-
-  const handleEventClick = (clickInfo) => {
-    const event = clickInfo.event;
-    alert(`
-      Disciplina: ${event.title}
-      Professor: ${event.extendedProps.professor}
-      Horário: ${event.start.toLocaleTimeString(
-        "pt-PT"
-      )} - ${event.end.toLocaleTimeString("pt-PT")}
-      Sala: ${event.extendedProps.classroom}
-      Tipo: ${event.extendedProps.tipologia}
-    `);
-  };
-
-  const calculateStats = () => ({
-    totalClasses: schedule?.blocks?.length || 0,
-    uniqueSubjects:
-      new Set(schedule?.blocks?.map((b) => b.SubjectName)).size || 0,
-    totalHours:
-      schedule?.blocks
-        ?.reduce((sum, block) => {
-          const start = new Date(`2000-01-01T${block.StartHour}`);
-          const end = new Date(`2000-01-01T${block.EndHour}`);
-          return sum + (end - start) / (1000 * 60 * 60);
-        }, 0)
-        .toFixed(1) || 0,
-  });
-
-  const stats = calculateStats();
-
+  /* ------------------ UI States ------------------ */
   if (loading) {
     return (
-      <Container
-        fluid
-        className="mainContainer d-flex justify-content-center align-items-center"
-        style={{ minHeight: "400px" }}
-      >
-        <div className="text-center">
-          <Spinner animation="border" />
-          <div className="mt-2">Carregando horário...</div>
-        </div>
+      <Container fluid className="mainContainer d-flex justify-content-center align-items-center" style={{ minHeight: 400 }}>
+        <Spinner animation="border" />
       </Container>
     );
   }
@@ -197,10 +133,7 @@ const CalendarView = () => {
         <Alert variant="danger" className="mt-4">
           <Alert.Heading>Erro ao carregar horário</Alert.Heading>
           <p>{error}</p>
-          <Button
-            variant="outline-danger"
-            onClick={() => navigate("/calendar")}
-          >
+          <Button variant="outline-danger" onClick={() => navigate("/calendar")}>
             Voltar aos Horários
           </Button>
         </Alert>
@@ -208,80 +141,89 @@ const CalendarView = () => {
     );
   }
 
+  /* ------------------ Stats ------------------ */
+  const stats = {
+    total:  schedule.blocks.length,
+    uniq:   new Set(schedule.blocks.map((b) => b.SubjectName)).size,
+    hours:  schedule.blocks.reduce((s, b) => {
+              const st = new Date(`2000-01-01T${b.StartHour}`);
+              const en = new Date(`2000-01-01T${b.EndHour}`);
+              return s + (en - st) / 3_600_000;
+            }, 0).toFixed(1),
+  };
+
+  /* ------------------ Main Render ------------------ */
   return (
     <Container fluid className="mainContainer">
       <h2 className="headerText text-center">Visualização de Horário</h2>
 
-      <div className="schedule-info mb-4 p-3 bg-light rounded text-center">
-        <h4 className="mb-1">{schedule?.Name}</h4>
-        <p className="mb-0">Horário Semanal - Visualização</p>
-        {schedule?.CurricularYear && (
-          <p className="mb-0">
-            <strong>Ano Curricular:</strong> {schedule.CurricularYear}
-          </p>
-        )}
-        {schedule?.Class && (
-          <p className="mb-0">
-            <strong>Turma:</strong> {schedule.Class}
-          </p>
-        )}
+      {/* INFO BANNER -------------------------------------------------- */}
+      <div className="schedule-info mb-4 p-3 rounded text-center" style={{ background: "var(--bs-success-bg-subtle)" }}>
+        <h4 className="mb-1">{schedule.Name}</h4>
+        <p className="mb-0">Horário Semanal – Visualização</p>
+
+        <div className="d-flex justify-content-center flex-wrap gap-4 mt-2 fw-medium">
+          {schedule.CurricularYear &&
+            withTooltip(<FaGraduationCap className="icon-primary" />, "Ano Curricular", schedule.CurricularYear)}
+          {schedule.Class &&
+            withTooltip(<FaChalkboardTeacher className="icon-primary" />, "Turma", schedule.Class)}
+          {withTooltip(<FaCalendarPlus  className="icon-primary" />, "Data de início",
+            new Date(schedule.StartDate).toLocaleDateString("pt-PT"))}
+          {withTooltip(<FaCalendarCheck className="icon-primary" />, "Data de fim",
+            new Date(schedule.EndDate).toLocaleDateString("pt-PT"))}
+        </div>
       </div>
 
       <Row>
+        {/* CONTROLES -------------------------------------------------- */}
         <Col md={3}>
           <Card className="mb-4 card">
-            <Card.Header className="cardHeader">
-              Controles de Visualização
-            </Card.Header>
-            <Card.Body>
-              <div className="d-grid gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => navigate("/calendar")}
-                >
-                  ← Voltar aos Horários
-                </Button>
-                <Button
-                  className="button"
-                  onClick={() =>
-                    navigate(`/calendar/create`, {
-                      state: {
-                        scheduleId: scheduleId,
-                        scheduleName: schedule.calendarName,
-                        startDate: new Date(startDate).toISOString(),
-                        endDate: new Date(endDate).toISOString(),
-                        curricularYear: "1º Ano", 
-                      },
-                    })
-                  }
-                >
-                  ✏️ Editar Horário
-                </Button>
-              </div>
+            <Card.Header className="cardHeader">Controles</Card.Header>
+            <Card.Body className="d-grid gap-2">
+              <Button variant="secondary" onClick={() => navigate("/calendar")}>
+                ← Voltar aos Horários
+              </Button>
+              <Button
+                className="button"
+                onClick={() =>
+                  navigate("/calendar/create", {
+                    state: {
+                      scheduleId:     scheduleId,
+                      scheduleName:   schedule.Name,
+                      startDate:      schedule.StartDate,
+                      endDate:        schedule.EndDate,
+                      curricularYear: schedule.CurricularYear,
+                      class:          schedule.Class,
+                    },
+                  })
+                }
+              >
+                ✏️ Editar Horário
+              </Button>
             </Card.Body>
           </Card>
 
+          {/* STATS ---------------------------------------------------- */}
           <Card className="mb-4 card">
-            <Card.Header className="cardHeader">
-              Estatísticas do Horário
-            </Card.Header>
-            <Card.Body>
-              <div className="text-center mb-3">
-                <h4 className="text-primary mb-1">{stats.totalClasses}</h4>
+            <Card.Header className="cardHeader">Estatísticas</Card.Header>
+            <Card.Body className="text-center">
+              <div className="mb-3">
+                <h4 className="text-primary mb-1">{stats.total}</h4>
                 <small className="text-muted">Aulas Totais</small>
               </div>
-              <div className="text-center mb-3">
-                <h4 className="text-success mb-1">{stats.uniqueSubjects}</h4>
+              <div className="mb-3">
+                <h4 className="text-success mb-1">{stats.uniq}</h4>
                 <small className="text-muted">Disciplinas</small>
               </div>
-              <div className="text-center">
-                <h4 className="text-warning mb-1">{stats.totalHours}h</h4>
+              <div>
+                <h4 className="text-warning mb-1">{stats.hours} h</h4>
                 <small className="text-muted">Horas Semanais</small>
               </div>
             </Card.Body>
           </Card>
         </Col>
 
+        {/* CALENDÁRIO ------------------------------------------------- */}
         <Col md={9}>
           <Card className="card">
             <Card.Body>
@@ -289,31 +231,33 @@ const CalendarView = () => {
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                 initialView="timeGridWeek"
                 headerToolbar={false}
-                titleFormat={{ weekday: "long" }}
-                dayHeaderFormat={{ weekday: "short" }}
-                slotDuration="00:30:00"
-                slotMinTime="08:30:00"
-                slotMaxTime="23:30:00"
+                slotDuration="00:30"
+                slotMinTime="08:30"
+                slotMaxTime="23:30"
                 allDaySlot={false}
-                weekends={true}
+                weekends
                 hiddenDays={[0]}
-                dayMaxEvents={true}
+                dayMaxEvents
                 events={events}
-                eventContent={renderEventContent}
-                eventClick={handleEventClick}
-                height="auto"
+                eventContent={({ event, timeText }) => (
+                  <>
+                    <b>{timeText}</b> <i>{event.title}</i>
+                  </>
+                )}
+                eventClick={({ event }) =>
+                  alert(
+`Disciplina: ${event.title}
+Professor:  ${event.extendedProps.professor}
+Horário:    ${event.start.toLocaleTimeString("pt-PT")} – ${event.end.toLocaleTimeString("pt-PT")}
+Sala:       ${event.extendedProps.classroom}
+Tipo:       ${event.extendedProps.tipologia}`
+                  )
+                }
                 locale="pt"
                 firstDay={1}
-                slotLabelFormat={{
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                }}
-                eventTimeFormat={{
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                }}
+                height="auto"
+                slotLabelFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
+                eventTimeFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
               />
             </Card.Body>
           </Card>
@@ -321,6 +265,4 @@ const CalendarView = () => {
       </Row>
     </Container>
   );
-};
-
-export default CalendarView;
+}
