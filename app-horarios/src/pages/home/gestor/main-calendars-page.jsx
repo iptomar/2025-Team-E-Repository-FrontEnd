@@ -19,6 +19,8 @@ import {
 import {
   FaChalkboardTeacher,
   FaCalendarAlt,
+  FaCalendarPlus,
+  FaCalendarCheck,
   FaGraduationCap,
   FaBook
 } from "react-icons/fa";
@@ -252,8 +254,10 @@ export default function CalendarListing() {
                 <div className="mt-2 d-flex flex-row flex-wrap gap-4">
                   {renderWithTooltip(<FaGraduationCap className="icon-primary" />, "Ano Curricular", cal.CurricularYear)}
                   {renderWithTooltip(<FaChalkboardTeacher className="icon-primary" />, "Turma", cal.Class)}
-                  {renderWithTooltip(<FaBook className="icon-primary"/>, "Curso", cal.CourseName)}
-                  {renderWithTooltip(<FaCalendarAlt className="icon-primary"/>, "Data de criação", new Date(cal.CreatedOn).toLocaleDateString("pt-PT"))}
+                  {renderWithTooltip(<FaBook className="icon-primary" />, "Curso", cal.CourseName)}
+                  {renderWithTooltip(<FaCalendarPlus className="icon-primary" />, "Data de início", new Date(cal.StartDate).toLocaleDateString("pt-PT"))}
+                  {renderWithTooltip(<FaCalendarCheck className="icon-primary" />, "Data de fim", new Date(cal.EndDate).toLocaleDateString("pt-PT"))}
+                  {renderWithTooltip(<FaCalendarAlt className="icon-primary" />, "Data de criação", new Date(cal.CreatedOn).toLocaleDateString("pt-PT"))}
                 </div>
               </div>
               <div>
