@@ -194,6 +194,7 @@ export default function CalendarView() {
                       endDate:        schedule.EndDate,
                       curricularYear: schedule.CurricularYear,
                       class:          schedule.Class,
+                      blocks:         schedule.blocks, 
                     },
                   })
                 }

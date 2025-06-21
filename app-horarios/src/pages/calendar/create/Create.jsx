@@ -26,6 +26,11 @@ import {
  * the IPT (Instituto Politécnico de Tomar) design style.
  */
 export default function CalendarCreate() {
+    const tipologyColor = (t) =>
+        t === "Teorico"         ? "#b25d31" :
+        t === "Pratica"         ? "#5d9b42" :
+        t === "Teorico-Pratica" ? "#4285f4" : "#aa46bb";
+
     const navigate = useNavigate();
 
     //websockets
@@ -45,10 +50,6 @@ export default function CalendarCreate() {
         newSocket.disconnect();
         };
     }, []);
-
-
- 
-
 
     // State for courses.jsx and their required hours
     const [courses, setCourses] = useState([]);
@@ -102,7 +103,8 @@ export default function CalendarCreate() {
 
     const location = useLocation();
 
-    const { scheduleId, scheduleName, startDate, endDate } = location.state;
+    const { scheduleId, scheduleName, startDate, endDate,curricularYear, blocks } = location.state || {};
+
 
  const renderWithTooltip = (icon, tooltip, value) => (
     <OverlayTrigger placement="top" overlay={<Tooltip>{tooltip}</Tooltip>}>
@@ -149,7 +151,7 @@ export default function CalendarCreate() {
         setLoadingCourses(true);
         setCoursesError(null);
         try {
-            const curricularYear = location.state?.curricularYear;
+            //const curricularYear = location.state?.curricularYear;
             const data = await fetchSubjectsWithProfessors(curricularYear);
             console.log("teste" , curricularYear);
 
@@ -176,7 +178,69 @@ export default function CalendarCreate() {
         }
     };
     loadCourses();
-}, [location.state?.curricularYear]); // 👈 depende do ano curricular
+}, []);
+
+
+    // After edit, puts all blocks in calendar
+    useEffect(() => {
+    const convertBlocksToEvents = async () => {
+        try {
+            const classrooms = await fetchClassrooms();
+            const subjects = await fetchSubjectsWithProfessors(curricularYear);
+            
+            const weekStartOf = (d) => {
+                const date = new Date(d);
+                const diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
+                return new Date(date.setDate(diff));
+            };
+
+            const startWeek = weekStartOf(new Date());
+
+            const evts = blocks.map((b) => {
+                const subj = subjects.find((s) => s.Id === b.SubjectFK);
+                const room = classrooms.find((c) => c.Id === b.ClassroomFK);
+
+                const dow = b.DayOfWeek ?? 1;
+
+                const baseDate = new Date(startWeek);
+                baseDate.setDate(startWeek.getDate() + (dow - 1));
+
+                const [sh, sm] = new Date(b.StartHour).toTimeString().split(":");
+                const [eh, em] = new Date(b.EndHour).toTimeString().split(":");
+
+                const start = new Date(baseDate);
+                start.setHours(+sh, +sm, 0, 0);
+
+                const end = new Date(baseDate);
+                end.setHours(+eh, +em, 0, 0);
+
+                return {
+                id: b.Id,
+                title: `${b.SubjectName} - ${b.ClassroomName || room?.Name || "Sem sala"} - ${subj?.Professor || "N/A"}`,
+                start,
+                end,
+                backgroundColor: tipologyColor(subj?.Tipologia),
+                borderColor:     tipologyColor(subj?.Tipologia),
+                extendedProps: {
+                    professor: subj?.Professor || "N/A",
+                    classroom: b.ClassroomName || room?.Name || `Sala ${b.ClassroomFK}`,
+                    tipologia: subj?.Tipologia || "N/A",
+                    courseId: subj?.Id || null
+                },
+            };
+      });
+
+      setEvents(evts); // 👈 aqui é que passa ao calendário
+    } catch (err) {
+      console.error("Erro ao converter blocos:", err);
+    }
+  };
+
+  if (blocks && blocks.length > 0 && curricularYear) {
+    convertBlocksToEvents();
+  }
+}, ); // 👈 só corre quando estes mudarem
+
 
     // Check if the schedule is complete
     useEffect(() => {
@@ -251,6 +315,7 @@ export default function CalendarCreate() {
                     : course
             )
         );
+
         // Automatically open room selection modal
         setSelectedEvent(newEvent);
         setSelectedRoom("");
@@ -316,7 +381,6 @@ export default function CalendarCreate() {
 
         if (!isSalaDisponivel) return;
 
-        //todo. aqui: lOGICA DE IR BUSCAR Á BASE DE DADOS!!
         console.log(new Date(startDate).toISOString());
         //1o ter uma lista
         const overlapingBlocks = await fetchOverlappingBlocks({
