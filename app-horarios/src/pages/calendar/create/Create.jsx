@@ -47,18 +47,23 @@ export default function CalendarCreate() {
       : "#aa46bb";
 
   const navigate = useNavigate();
-
+ const user = JSON.parse(localStorage.getItem("user")) || {};
   //websockets
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     const newSocket = io("http://localhost:3001");
-
+   
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
       console.log("WebSocket: Cliente conectado -", newSocket.id);
+
+      if (user?.email) {
+      newSocket.emit('limparBufferPorEmail', { email: user.email });
+    }
     });
+    
 
     // Cleanup
     return () => {
@@ -549,9 +554,11 @@ export default function CalendarCreate() {
         const dataToBuffer = {
           roomId: room.id,
           professorName: professor,
+          professorId: selectedCourse.professorId,  
           startHour,
           endHour,
           dayOfWeek,
+          userEmail: user.email
         };
 
         socket.emit("adicionarSala", dataToBuffer);
