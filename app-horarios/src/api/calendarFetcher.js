@@ -171,3 +171,21 @@ export const fetchScheduleById = async (scheduleId, token) => {
     }
     return data;
 };
+
+// Delete a schedule
+export const deleteSchedule = async (token, scheduleId) => {
+    const response = await fetch(`${API_BASE}/api/schedules/${scheduleId}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Erro ao apagar horário');
+    }
+
+    return true;
+};

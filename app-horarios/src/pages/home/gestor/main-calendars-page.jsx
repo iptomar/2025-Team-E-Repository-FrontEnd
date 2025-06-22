@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { FiPlus, FiEye, FiEdit } from "react-icons/fi";
+import {FiPlus, FiEye, FiEdit, FiTrash} from "react-icons/fi";
 
 import {
   FaChalkboardTeacher,
@@ -26,9 +26,10 @@ import CreateCalendarModal from "../../../components/Calendar/CreateCalendarModa
 import {
   createSchedule,
   fetchUserSchedules,
-  fetchUserCourses,
+  fetchUserCourses, deleteSchedule,
 } from "../../../api/calendarFetcher";
 import { FULL_ROUTES } from "../../../routes.jsx";
+import DeleteConfirmationModal from "../../../components/DeleteConfirmationModal/DeleteConfirmationModal.jsx";
 
 export default function CalendarListing() {
   const navigate = useNavigate();
@@ -48,6 +49,10 @@ export default function CalendarListing() {
   const [selectedCurricularYear, setSelectedCurricularYear] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [scheduleToDelete, setScheduleToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const handleOpenModal = () => {
     setCreateError(null);
     setShowModal(true);
@@ -68,13 +73,13 @@ export default function CalendarListing() {
         setLoading(true);
         const token = localStorage.getItem("token");
         const { schedules, total } = await fetchUserSchedules(
-          token,
-          currentPage,
-          itemsPerPage,
-          searchTerm,
-          selectedClass,
-          selectedCurricularYear,
-          selectedCourse
+            token,
+            currentPage,
+            itemsPerPage,
+            searchTerm,
+            selectedClass,
+            selectedCurricularYear,
+            selectedCourse
         );
 
         setCalendars(schedules);
@@ -112,14 +117,54 @@ export default function CalendarListing() {
     setCurrentPage(1);
   }, [selectedClass, selectedCurricularYear, selectedCourse, searchTerm]);
 
+
+  const handleDeleteClick = (schedule) => {
+    setScheduleToDelete(schedule);
+    setShowDeleteModal(true);
+    setDeleteError(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!scheduleToDelete) return;
+
+    try {
+      setDeleteLoading(true);
+      const token = localStorage.getItem("token");
+      await deleteSchedule(token, scheduleToDelete.Id || scheduleToDelete.id);
+
+      // Refresh the list
+      setCalendars(calendars.filter(cal =>
+          (cal.Id || cal.id) !== (scheduleToDelete.Id || scheduleToDelete.id)
+      ));
+
+      setShowDeleteModal(false);
+      setScheduleToDelete(null);
+
+      // Show success message (optional)
+      setCreateError(null); // Clear any previous errors
+
+    } catch (error) {
+      setDeleteError(error.message);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setScheduleToDelete(null);
+    setDeleteError(null);
+  };
+
+
   const handleCreateCalendar = async ({
-    courseId,
-    calendarName,
-    startDate,
-    endDate,
-    curricularYear,
-    class: className,
-  }) => {
+                                        courseId,
+                                        calendarName,
+                                        startDate,
+                                        endDate,
+                                        curricularYear,
+                                        class: className,
+                                      }) => {
     if (new Date(endDate) < new Date(startDate)) {
       setCreateError("A data de fim não pode ser anterior à data de início.");
       return;
@@ -154,183 +199,212 @@ export default function CalendarListing() {
   };
 
   const renderWithTooltip = (icon, tooltip, value) => (
-    <OverlayTrigger placement="top" overlay={<Tooltip>{tooltip}</Tooltip>}>
-      <div className="d-flex align-items-center gap-2">
-        {icon} <span>{value}</span>
-      </div>
-    </OverlayTrigger>
+      <OverlayTrigger placement="top" overlay={<Tooltip>{tooltip}</Tooltip>}>
+        <div className="d-flex align-items-center gap-2">
+          {icon} <span>{value}</span>
+        </div>
+      </OverlayTrigger>
   );
 
   const renderTextWithTooltip = (text, tooltip) => (
-    <OverlayTrigger placement="top" overlay={<Tooltip>{tooltip}</Tooltip>}>
-      <span>{text}</span>
-    </OverlayTrigger>
+      <OverlayTrigger placement="top" overlay={<Tooltip>{tooltip}</Tooltip>}>
+        <span>{text}</span>
+      </OverlayTrigger>
   );
 
   return (
-    <Container>
-      <Card className="p-3 my-4">
-        <div className="d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center flex-wrap gap-2">
-            <Form.Control
-              type="text"
-              placeholder="Pesquisar por nome..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ width: "250px" }}
-            />
-            <Form.Select
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-              style={{ width: "200px" }}
-            >
-              <option value="">Filtrar por turma</option>
-              <option value="Turma A">Turma A</option>
-              <option value="Turma B">Turma B</option>
-              <option value="Turma C">Turma C</option>
-              <option value="Turma D">Turma D</option>
-              <option value="Turma E">Turma E</option>
-            </Form.Select>
-            <Form.Select
-              value={selectedCurricularYear}
-              onChange={(e) => setSelectedCurricularYear(e.target.value)}
-              style={{ width: "230px" }}
-            >
-              <option value="">Filtrar por Ano Curricular</option>
-              <option value="1º Ano">1º Ano</option>
-              <option value="2º Ano">2º Ano</option>
-              <option value="3º Ano">3º Ano</option>
-            </Form.Select>
-            <Form.Select
-              value={selectedCourse}
-              onChange={(e) => setSelectedCourse(e.target.value)}
-              style={{ width: "250px" }}
-            >
-              <option value="">Filtrar por Curso</option>
-              {courses.map((course) => (
-                <option key={course.id} value={course.id}>{course.name}</option>
-              ))}
-            </Form.Select>
+      <Container>
+        <Card className="p-3 my-4">
+          <div className="d-flex justify-content-between align-items-center">
+            <div className="d-flex align-items-center flex-wrap gap-2">
+              <Form.Control
+                  type="text"
+                  placeholder="Pesquisar por nome..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ width: "250px" }}
+              />
+              <Form.Select
+                  value={selectedClass}
+                  onChange={(e) => setSelectedClass(e.target.value)}
+                  style={{ width: "200px" }}
+              >
+                <option value="">Filtrar por turma</option>
+                <option value="Turma A">Turma A</option>
+                <option value="Turma B">Turma B</option>
+                <option value="Turma C">Turma C</option>
+                <option value="Turma D">Turma D</option>
+                <option value="Turma E">Turma E</option>
+              </Form.Select>
+              <Form.Select
+                  value={selectedCurricularYear}
+                  onChange={(e) => setSelectedCurricularYear(e.target.value)}
+                  style={{ width: "230px" }}
+              >
+                <option value="">Filtrar por Ano Curricular</option>
+                <option value="1º Ano">1º Ano</option>
+                <option value="2º Ano">2º Ano</option>
+                <option value="3º Ano">3º Ano</option>
+              </Form.Select>
+              <Form.Select
+                  value={selectedCourse}
+                  onChange={(e) => setSelectedCourse(e.target.value)}
+                  style={{ width: "250px" }}
+              >
+                <option value="">Filtrar por Curso</option>
+                {courses.map((course) => (
+                    <option key={course.id} value={course.id}>{course.name}</option>
+                ))}
+              </Form.Select>
+            </div>
+
+            <Button variant="primary" onClick={handleOpenModal} className="d-flex align-items-center gap-2">
+              <FiPlus /> Criar novo horário
+            </Button>
           </div>
+        </Card>
 
-          <Button variant="primary" onClick={handleOpenModal} className="d-flex align-items-center gap-2">
-            <FiPlus /> Criar novo horário
-          </Button>
-        </div>
-      </Card>
+        {createError && (
+            <Alert variant="danger" onClose={() => setCreateError(null)} dismissible>
+              {createError}
+            </Alert>
+        )}
 
-      {createError && (
-        <Alert variant="danger" onClose={() => setCreateError(null)} dismissible>
-          {createError}
-        </Alert>
-      )}
+        <CreateCalendarModal
+            show={showModal}
+            onHide={handleCloseModal}
+            onSubmit={handleCreateCalendar}
+        />
 
-      <CreateCalendarModal
-        show={showModal}
-        onHide={handleCloseModal}
-        onSubmit={handleCreateCalendar}
-      />
-
-      {loading ? (
-        <div className="text-center">
-          <Spinner animation="border" />
-        </div>
-      ) : error ? (
-        <Alert variant="danger">Erro ao carregar horários: {error}</Alert>
-      ) : calendars.length === 0 ? (
-        <Alert variant="info">Nenhum horário encontrado.</Alert>
-      ) : (
-          <ListGroup>
-            {calendars.map((cal) => (
-                <ListGroup.Item
-                    key={cal.Id || cal.id}
-                    className="d-flex justify-content-between align-items-center gap-3"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => handleViewSchedule(cal.Id || cal.id)}
-                >
-                  <div>
-                    <h5 className="mb-1 d-flex align-items-center gap-2">
-                      <FaCalendarAlt className="icon-primary"/> {renderTextWithTooltip(cal.Name, "Nome do horário")}
-                    </h5>
-                    <div className="mt-2 d-flex flex-row flex-wrap gap-4">
-                      {renderWithTooltip(<FaGraduationCap className="icon-primary" />, "Ano Curricular", cal.CurricularYear)}
-                      {renderWithTooltip(<FaChalkboardTeacher className="icon-primary" />, "Turma", cal.Class)}
-                      {renderWithTooltip(<FaBook className="icon-primary" />, "Curso", cal.CourseName)}
-                      {renderWithTooltip(<FaCalendarPlus className="icon-primary" />, "Data de início", new Date(cal.StartDate).toLocaleDateString("pt-PT"))}
-                      {renderWithTooltip(<FaCalendarCheck className="icon-primary" />, "Data de fim", new Date(cal.EndDate).toLocaleDateString("pt-PT"))}
-                      {renderWithTooltip(<FaCalendarAlt className="icon-primary" />, "Data de criação", new Date(cal.CreatedOn).toLocaleDateString("pt-PT"))}
+        {loading ? (
+            <div className="text-center">
+              <Spinner animation="border" />
+            </div>
+        ) : error ? (
+            <Alert variant="danger">Erro ao carregar horários: {error}</Alert>
+        ) : calendars.length === 0 ? (
+            <Alert variant="info">Nenhum horário encontrado.</Alert>
+        ) : (
+            <ListGroup>
+              {calendars.map((cal) => (
+                  <ListGroup.Item
+                      key={cal.Id || cal.id}
+                      className="d-flex justify-content-between align-items-center gap-3"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleViewSchedule(cal.Id || cal.id)}
+                  >
+                    <div>
+                      <h5 className="mb-1 d-flex align-items-center gap-2">
+                        <FaCalendarAlt className="icon-primary"/> {renderTextWithTooltip(cal.Name, "Nome do horário")}
+                      </h5>
+                      <div className="mt-2 d-flex flex-row flex-wrap gap-4">
+                        {renderWithTooltip(<FaGraduationCap className="icon-primary" />, "Ano Curricular", cal.CurricularYear)}
+                        {renderWithTooltip(<FaChalkboardTeacher className="icon-primary" />, "Turma", cal.Class)}
+                        {renderWithTooltip(<FaBook className="icon-primary" />, "Curso", cal.CourseName)}
+                        {renderWithTooltip(<FaCalendarPlus className="icon-primary" />, "Data de início", new Date(cal.StartDate).toLocaleDateString("pt-PT"))}
+                        {renderWithTooltip(<FaCalendarCheck className="icon-primary" />, "Data de fim", new Date(cal.EndDate).toLocaleDateString("pt-PT"))}
+                        {renderWithTooltip(<FaCalendarAlt className="icon-primary" />, "Data de criação", new Date(cal.CreatedOn).toLocaleDateString("pt-PT"))}
+                      </div>
                     </div>
-                  </div>
-                  <div className="d-flex gap-2">
-                    <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditSchedule(cal.Id || cal.id);
-                        }}
-                        className="d-flex align-items-center gap-2"
-                    >
-                      <FiEdit /> Editar
-                    </Button>
-                    <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewSchedule(cal.Id || cal.id);
-                        }}
-                        className="d-flex align-items-center gap-2"
-                    >
-                      <FiEye /> Ver
-                    </Button>
-                  </div>
-                </ListGroup.Item>
-            ))}
-          </ListGroup>
-      )}
+                    <div className="d-flex gap-2">
+                      <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(cal);
+                          }}
+                          className="d-flex align-items-center gap-2"
+                      >
+                        <FiTrash /> Eliminar
+                      </Button>
+                      <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditSchedule(cal.Id || cal.id);
+                          }}
+                          className="d-flex align-items-center gap-2"
+                      >
+                        <FiEdit /> Editar
+                      </Button>
+                      <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewSchedule(cal.Id || cal.id);
+                          }}
+                          className="d-flex align-items-center gap-2"
+                      >
+                        <FiEye /> Ver
+                      </Button>
+                    </div>
 
-      {!loading && totalPages > 1 && (
-        <div className="d-flex justify-content-center mt-4">
-          <Pagination>
-            <Pagination.Prev
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            />
+                  </ListGroup.Item>
+              ))}
+            </ListGroup>
+        )}
 
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              let startPage;
-              if (totalPages <= 5) {
-                startPage = 1;
-              } else if (currentPage <= 3) {
-                startPage = 1;
-              } else if (currentPage >= totalPages - 2) {
-                startPage = totalPages - 4;
-              } else {
-                startPage = currentPage - 2;
-              }
+        {!loading && totalPages > 1 && (
+            <div className="d-flex justify-content-center mt-4">
+              <Pagination>
+                <Pagination.Prev
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                />
 
-              const pageNumber = startPage + i;
-              return (
-                <Pagination.Item
-                  key={pageNumber}
-                  active={pageNumber === currentPage}
-                  onClick={() => setCurrentPage(pageNumber)}
-                >
-                  {pageNumber}
-                </Pagination.Item>
-              );
-            })}
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let startPage;
+                  if (totalPages <= 5) {
+                    startPage = 1;
+                  } else if (currentPage <= 3) {
+                    startPage = 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    startPage = totalPages - 4;
+                  } else {
+                    startPage = currentPage - 2;
+                  }
 
-            <Pagination.Next
-              disabled={currentPage === totalPages}
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-            />
-          </Pagination>
-        </div>
-      )}
-    </Container>
+                  const pageNumber = startPage + i;
+                  return (
+                      <Pagination.Item
+                          key={pageNumber}
+                          active={pageNumber === currentPage}
+                          onClick={() => setCurrentPage(pageNumber)}
+                      >
+                        {pageNumber}
+                      </Pagination.Item>
+                  );
+                })}
+
+                <Pagination.Next
+                    disabled={currentPage === totalPages}
+                    onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                />
+              </Pagination>
+            </div>
+        )}
+
+        {/* Delete Error Alert */}
+        {deleteError && (
+            <Alert variant="danger" onClose={() => setDeleteError(null)} dismissible>
+              Erro ao eliminar horário: {deleteError}
+            </Alert>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmationModal
+            show={showDeleteModal}
+            onHide={handleDeleteCancel}
+            onConfirm={handleDeleteConfirm}
+            scheduleName={scheduleToDelete?.Name || ''}
+            loading={deleteLoading}
+        />
+
+      </Container>
   );
 }
