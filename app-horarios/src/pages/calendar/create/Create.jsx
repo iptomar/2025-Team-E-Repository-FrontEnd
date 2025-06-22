@@ -179,7 +179,7 @@ export default function CalendarCreate() {
         //const curricularYear = location.state?.curricularYear;
         const data = await fetchSubjectsWithProfessors(curricularYear);
         console.log("teste", curricularYear);
-console.log("professor");
+        console.log("professor");
         const colorPalette = [
           "#b25d31",
           "#5d9b42",
@@ -290,7 +290,7 @@ console.log("professor");
         text: "Esta sala já tem conflitos neste horário!",
         type: "danger",
       });
-        setShowRoomModal(false);
+      setShowRoomModal(false);
       return;
     }
 
@@ -299,7 +299,7 @@ console.log("professor");
         text: "Este professor já tem aulas nesse horário!",
         type: "danger",
       });
-        setShowRoomModal(false);
+      setShowRoomModal(false);
       return;
     }
 
@@ -354,9 +354,10 @@ console.log("professor");
     }
 
     const selectedCourse = courses.find((c) => c.id === currentCourse);
-    console.log("teste", selectedCourse)
+    console.log("teste", selectedCourse);
     const newEvent = {
       id: Date.now(),
+      isNew: true,
       title: `${selectedCourse.name} (Sem sala) - ${selectedCourse.professor}`,
       start: selectInfo.startStr,
       end: selectInfo.endStr,
@@ -467,16 +468,15 @@ console.log("professor");
           classNames: [isConflict ? "evento-conflito" : "evento-ocupado"],
         };
       });
-  console.log(conflitos)
+      console.log(conflitos);
       setEventosConflito(conflitos);
-    
 
       if (conflitos.length > 0) {
         setMessage({
           text: "Esta sala já tem conflitos neste horário!",
           type: "danger",
         });
-          setShowRoomModal(false);
+        setShowRoomModal(false);
         return;
       }
 
@@ -527,7 +527,7 @@ console.log("professor");
             classNames: [isConflict ? "evento-conflito" : "evento-ocupado"],
           };
         });
-console.log(conflitosProfessor)
+        console.log(conflitosProfessor);
         setEventosConflito(conflitosProfessor);
 
         const hasConflictProfessor = blocos.some((b) => b.IsConflict);
@@ -540,6 +540,8 @@ console.log(conflitosProfessor)
           setShowRoomModal(false);
           return;
         }
+
+        selectedEvent.isNew = false;
 
         // Se não houve conflito, adiciona ao buffer e atualiza estado
         const startHour = eventStart.toTimeString().slice(0, 8);
@@ -617,14 +619,16 @@ console.log(conflitosProfessor)
       )
     );
 
- socket.emit("removerSala", {
-  roomId: parseInt(selectedEvent.extendedProps.room),
-  dayOfWeek: new Date(selectedEvent.start).getDay() === 0 ? 7 : new Date(selectedEvent.start).getDay(),
-  startHour: new Date(selectedEvent.start).toTimeString().slice(0, 8), // HH:mm:ss
-  endHour: new Date(selectedEvent.end).toTimeString().slice(0, 8),     // HH:mm:ss
-  professorName: selectedEvent.extendedProps.professor || "",         // se for necessário
-});
-
+    socket.emit("removerSala", {
+      roomId: parseInt(selectedEvent.extendedProps.room),
+      dayOfWeek:
+        new Date(selectedEvent.start).getDay() === 0
+          ? 7
+          : new Date(selectedEvent.start).getDay(),
+      startHour: new Date(selectedEvent.start).toTimeString().slice(0, 8), // HH:mm:ss
+      endHour: new Date(selectedEvent.end).toTimeString().slice(0, 8), // HH:mm:ss
+      professorName: selectedEvent.extendedProps.professor || "", // se for necessário
+    });
 
     setEvents(
       events.filter((e) => parseInt(e.id) !== parseInt(selectedEvent.id))
@@ -1088,9 +1092,11 @@ console.log(conflitosProfessor)
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="danger" onClick={handleEventRemove}>
-            Remover Aula
-          </Button>
+          {selectedEvent && !selectedEvent.isNew && (
+            <Button variant="danger" onClick={handleEventRemove}>
+              Remover Aula
+            </Button>
+          )}
           <Button variant="secondary" onClick={() => setShowRoomModal(false)}>
             Cancelar
           </Button>
