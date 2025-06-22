@@ -290,6 +290,7 @@ console.log("professor");
         text: "Esta sala já tem conflitos neste horário!",
         type: "danger",
       });
+        setShowRoomModal(false);
       return;
     }
 
@@ -298,6 +299,7 @@ console.log("professor");
         text: "Este professor já tem aulas nesse horário!",
         type: "danger",
       });
+        setShowRoomModal(false);
       return;
     }
 
@@ -474,6 +476,7 @@ console.log("professor");
           text: "Esta sala já tem conflitos neste horário!",
           type: "danger",
         });
+          setShowRoomModal(false);
         return;
       }
 
@@ -533,6 +536,8 @@ console.log(conflitosProfessor)
             text: "Este professor já tem aulas nesse horário!",
             type: "danger",
           });
+
+          setShowRoomModal(false);
           return;
         }
 
