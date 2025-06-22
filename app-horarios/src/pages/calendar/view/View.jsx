@@ -31,9 +31,13 @@ import "./View.scss";
 /*  Helpers                                             */
 /* ---------------------------------------------------- */
 const tipologyColor = (t) =>
-  t === "Teorico"         ? "#b25d31" :
-  t === "Pratica"         ? "#5d9b42" :
-  t === "Teorico-Pratica" ? "#4285f4" : "#aa46bb";
+  t === "Teorico"
+    ? "#b25d31"
+    : t === "Pratica"
+    ? "#5d9b42"
+    : t === "Teorico-Pratica"
+    ? "#4285f4"
+    : "#aa46bb";
 
 const weekStartOf = (d) => {
   const date = new Date(d);
@@ -56,58 +60,64 @@ export default function CalendarView() {
   const { scheduleId } = useParams();
   const navigate = useNavigate();
 
-  const [schedule, setSchedule]   = useState(null);
-  const [events, setEvents]       = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState(null);
+  const [schedule, setSchedule] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   /* ------------------ Fetch ------------------ */
   useEffect(() => {
     const fetchAll = async () => {
       try {
         setLoading(true);
-        const token      = localStorage.getItem("token");
-        const sched      = await fetchScheduleById(scheduleId, token);
+        const token = localStorage.getItem("token");
+        const sched = await fetchScheduleById(scheduleId, token);
         const classrooms = await fetchClassrooms();
-        const subjects   = await fetchSubjectsWithProfessors(
+        const subjects = await fetchSubjectsWithProfessors(
           sched.CurricularYear
         );
 
         /* blocks → events */
         const startWeek = weekStartOf(new Date());
-        const evts = sched.blocks?.map((b) => {
-          const subj = subjects.find((s) => s.Id === b.SubjectFK);
-          const room = classrooms.find((c) => c.Id === b.ClassroomFK);
+        console.log("Blocos recebidos no horário:", sched.blocks);
+        const evts =
+          sched.blocks?.map((b) => {
+            const subj = subjects.find((s) => s.Id === b.SubjectFK);
+            const room = classrooms.find((c) => c.Id === b.ClassroomFK);
 
-          const dow      = b.DayOfWeek ?? 1;
-          const baseDate = new Date(startWeek);
-          baseDate.setDate(startWeek.getDate() + (dow - 1));
+            const dow = b.DayOfWeek ?? 1;
+            const baseDate = new Date(startWeek);
+            baseDate.setDate(startWeek.getDate() + (dow - 1));
 
-          const [sh, sm] = new Date(b.StartHour).toTimeString().split(":");
-          const [eh, em] = new Date(b.EndHour).toTimeString().split(":");
+            const [sh, sm] = b.StartHour.split(":");
+            const [eh, em] = b.EndHour.split(":");
 
-          const start = new Date(baseDate);
-          start.setHours(+sh, +sm, 0, 0);
-          const end   = new Date(baseDate);
-          end.setHours(+eh, +em, 0, 0);
+            const start = new Date(baseDate);
+            start.setHours(+sh, +sm, 0, 0);
+            const end = new Date(baseDate);
+            end.setHours(+eh, +em, 0, 0);
 
-          return {
-            id: b.Id,
-            title: `${b.SubjectName} - ${b.ClassroomName || room?.Name || "Sem sala"} - ${subj?.Professor || "N/A"}`,
-            start,
-            end,
-            backgroundColor: tipologyColor(subj?.Tipologia),
-            borderColor:     tipologyColor(subj?.Tipologia),
-            extendedProps: {
-              professor: subj?.Professor || "N/A",
-              classroom: b.ClassroomName || room?.Name || `Sala ${b.ClassroomFK}`,
-              tipologia: subj?.Tipologia || "N/A",
-            },
-          };
-        }) ?? [];
+            return {
+              id: b.Id,
+              title: `${b.SubjectName} - ${
+                b.ClassroomName || room?.Name || "Sem sala"
+              } - ${subj?.Professor || "N/A"}`,
+              start,
+              end,
+              backgroundColor: tipologyColor(subj?.Tipologia),
+              borderColor: tipologyColor(subj?.Tipologia),
+              extendedProps: {
+                professor: subj?.Professor || "N/A",
+                classroom:
+                  b.ClassroomName || room?.Name || `Sala ${b.ClassroomFK}`,
+                tipologia: subj?.Tipologia || "N/A",
+              },
+            };
+          }) ?? [];
 
         setSchedule(sched);
         setEvents(evts);
+        console.log("Eventos carregados:", evts.length, evts);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -121,7 +131,11 @@ export default function CalendarView() {
   /* ------------------ UI States ------------------ */
   if (loading) {
     return (
-      <Container fluid className="mainContainer d-flex justify-content-center align-items-center" style={{ minHeight: 400 }}>
+      <Container
+        fluid
+        className="mainContainer d-flex justify-content-center align-items-center"
+        style={{ minHeight: 400 }}
+      >
         <Spinner animation="border" />
       </Container>
     );
@@ -133,7 +147,10 @@ export default function CalendarView() {
         <Alert variant="danger" className="mt-4">
           <Alert.Heading>Erro ao carregar horário</Alert.Heading>
           <p>{error}</p>
-          <Button variant="outline-danger" onClick={() => navigate("/calendar")}>
+          <Button
+            variant="outline-danger"
+            onClick={() => navigate("/calendar")}
+          >
             Voltar aos Horários
           </Button>
         </Alert>
@@ -143,13 +160,15 @@ export default function CalendarView() {
 
   /* ------------------ Stats ------------------ */
   const stats = {
-    total:  schedule.blocks.length,
-    uniq:   new Set(schedule.blocks.map((b) => b.SubjectName)).size,
-    hours:  schedule.blocks.reduce((s, b) => {
-              const st = new Date(`2000-01-01T${b.StartHour}`);
-              const en = new Date(`2000-01-01T${b.EndHour}`);
-              return s + (en - st) / 3_600_000;
-            }, 0).toFixed(1),
+    total: schedule.blocks.length,
+    uniq: new Set(schedule.blocks.map((b) => b.SubjectName)).size,
+    hours: schedule.blocks
+      .reduce((s, b) => {
+        const st = new Date(`2000-01-01T${b.StartHour}`);
+        const en = new Date(`2000-01-01T${b.EndHour}`);
+        return s + (en - st) / 3_600_000;
+      }, 0)
+      .toFixed(1),
   };
 
   /* ------------------ Main Render ------------------ */
@@ -158,19 +177,36 @@ export default function CalendarView() {
       <h2 className="headerText text-center">Visualização de Horário</h2>
 
       {/* INFO BANNER -------------------------------------------------- */}
-      <div className="schedule-info mb-4 p-3 rounded text-center" style={{ background: "var(--bs-success-bg-subtle)" }}>
+      <div
+        className="schedule-info mb-4 p-3 rounded text-center"
+        style={{ background: "var(--bs-success-bg-subtle)" }}
+      >
         <h4 className="mb-1">{schedule.Name}</h4>
         <p className="mb-0">Horário Semanal – Visualização</p>
 
         <div className="d-flex justify-content-center flex-wrap gap-4 mt-2 fw-medium">
           {schedule.CurricularYear &&
-            withTooltip(<FaGraduationCap className="icon-primary" />, "Ano Curricular", schedule.CurricularYear)}
+            withTooltip(
+              <FaGraduationCap className="icon-primary" />,
+              "Ano Curricular",
+              schedule.CurricularYear
+            )}
           {schedule.Class &&
-            withTooltip(<FaChalkboardTeacher className="icon-primary" />, "Turma", schedule.Class)}
-          {withTooltip(<FaCalendarPlus  className="icon-primary" />, "Data de início",
-            new Date(schedule.StartDate).toLocaleDateString("pt-PT"))}
-          {withTooltip(<FaCalendarCheck className="icon-primary" />, "Data de fim",
-            new Date(schedule.EndDate).toLocaleDateString("pt-PT"))}
+            withTooltip(
+              <FaChalkboardTeacher className="icon-primary" />,
+              "Turma",
+              schedule.Class
+            )}
+          {withTooltip(
+            <FaCalendarPlus className="icon-primary" />,
+            "Data de início",
+            new Date(schedule.StartDate).toLocaleDateString("pt-PT")
+          )}
+          {withTooltip(
+            <FaCalendarCheck className="icon-primary" />,
+            "Data de fim",
+            new Date(schedule.EndDate).toLocaleDateString("pt-PT")
+          )}
         </div>
       </div>
 
@@ -188,13 +224,13 @@ export default function CalendarView() {
                 onClick={() =>
                   navigate("/calendar/create", {
                     state: {
-                      scheduleId:     scheduleId,
-                      scheduleName:   schedule.Name,
-                      startDate:      schedule.StartDate,
-                      endDate:        schedule.EndDate,
+                      scheduleId: scheduleId,
+                      scheduleName: schedule.Name,
+                      startDate: schedule.StartDate,
+                      endDate: schedule.EndDate,
                       curricularYear: schedule.CurricularYear,
-                      class:          schedule.Class,
-                      blocks:         schedule.blocks, 
+                      class: schedule.Class,
+                      blocks: schedule.blocks,
                     },
                   })
                 }
@@ -228,38 +264,48 @@ export default function CalendarView() {
         <Col md={9}>
           <Card className="card">
             <Card.Body>
-              <FullCalendar
-                plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                initialView="timeGridWeek"
-                headerToolbar={false}
-                slotDuration="00:30"
-                slotMinTime="08:30"
-                slotMaxTime="23:30"
-                allDaySlot={false}
-                weekends
-                hiddenDays={[0]}
-                dayMaxEvents
-                events={events}
-                eventContent={({ event, timeText }) => (
-                  <>
-                    <b>{timeText}</b> <i>{event.title}</i>
-                  </>
-                )}
-                eventClick={({ event }) =>
-                  alert(
-`Disciplina: ${event.title}
+             <FullCalendar
+  plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+  initialView="timeGridWeek"
+  headerToolbar={false}
+  slotDuration="00:30"
+  slotMinTime="08:30"
+  slotMaxTime="23:30"
+  allDaySlot={false}
+  weekends
+  hiddenDays={[0]}
+  dayMaxEvents
+  events={events}
+  eventContent={({ event, timeText }) => (
+    <>
+      <b>{timeText}</b> <i>{event.title}</i>
+    </>
+  )}
+  eventClick={({ event }) =>
+    alert(
+      `Disciplina: ${event.title}
 Professor:  ${event.extendedProps.professor}
 Horário:    ${event.start.toLocaleTimeString("pt-PT")} – ${event.end.toLocaleTimeString("pt-PT")}
 Sala:       ${event.extendedProps.classroom}
 Tipo:       ${event.extendedProps.tipologia}`
-                  )
-                }
-                locale="pt"
-                firstDay={1}
-                height="auto"
-                slotLabelFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
-                eventTimeFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
-              />
+    )
+  }
+  locale="pt"
+  firstDay={1}
+  dayHeaderFormat={{ weekday: "short" }}  // <--- aqui!
+  height="auto"
+  slotLabelFormat={{
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }}
+  eventTimeFormat={{
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }}
+/>
+
             </Card.Body>
           </Card>
         </Col>
