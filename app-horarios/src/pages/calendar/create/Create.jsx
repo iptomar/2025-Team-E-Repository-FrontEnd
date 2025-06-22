@@ -21,7 +21,7 @@ import { createEvent } from "../../../api/calendarFetcher.js";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FULL_ROUTES } from "../../../routes.jsx";
 import { fetchClassrooms } from "../../../api/classroomFetcher.js";
-import { fetchOverlappingBlocks } from "../../../api/blocksFetcher.js";
+
 import { io } from "socket.io-client";
 import {
   FaGraduationCap,
@@ -67,6 +67,8 @@ export default function CalendarCreate() {
   }, []);
 
   const [eventosConflito, setEventosConflito] = useState([]);
+  const [conflitosSala, setConflitosSala] = useState(null);
+  const [conflitosProfessor, setConflitosProfessor] = useState(null);
 
   // State for courses.jsx and their required hours
   const [courses, setCourses] = useState([]);
@@ -177,7 +179,7 @@ export default function CalendarCreate() {
         //const curricularYear = location.state?.curricularYear;
         const data = await fetchSubjectsWithProfessors(curricularYear);
         console.log("teste", curricularYear);
-
+console.log("professor");
         const colorPalette = [
           "#b25d31",
           "#5d9b42",
@@ -187,7 +189,9 @@ export default function CalendarCreate() {
         ];
         const transformed = data.map((subject, index) => ({
           id: subject.Id,
+          subjectId: subject.IdSubject, // id da cadeira (usa este para guardar no schedule)
           name: subject.Subject,
+          professorId: subject.professorId,
           professor: subject.Professor,
           allocatedHours: 0,
           type: subject.Tipologia,
@@ -267,6 +271,39 @@ export default function CalendarCreate() {
     }
   }); // 👈 só corre quando estes mudarem
 
+  // Reset conflicts and message quando abrir modal ou iniciar verificação
+  useEffect(() => {
+    setConflitosSala(null);
+    setConflitosProfessor(null);
+    setMessage({ text: "", type: "" });
+  }, [selectedEvent, selectedRoom]);
+
+  // Efetua verificação após receber ambos os conflitos
+  useEffect(() => {
+    if (conflitosSala === null || conflitosProfessor === null) return;
+
+    const hasSalaConflict = conflitosSala.some((b) => b.IsConflict);
+    const hasProfConflict = conflitosProfessor.some((b) => b.IsConflict);
+
+    if (hasSalaConflict) {
+      setMessage({
+        text: "Esta sala já tem conflitos neste horário!",
+        type: "danger",
+      });
+      return;
+    }
+
+    if (hasProfConflict) {
+      setMessage({
+        text: "Este professor já tem aulas nesse horário!",
+        type: "danger",
+      });
+      return;
+    }
+
+    // Se não houver conflitos, limpa mensagem
+    setMessage({ text: "", type: "" });
+  }, [conflitosSala, conflitosProfessor]);
   // Check if the schedule is complete
   useEffect(() => {
     const hasEvents = events.length > 0;
@@ -315,6 +352,7 @@ export default function CalendarCreate() {
     }
 
     const selectedCourse = courses.find((c) => c.id === currentCourse);
+    console.log("teste", selectedCourse)
     const newEvent = {
       id: Date.now(),
       title: `${selectedCourse.name} (Sem sala) - ${selectedCourse.professor}`,
@@ -323,7 +361,7 @@ export default function CalendarCreate() {
       backgroundColor: selectedCourse.color,
       extendedProps: {
         courseId: currentCourse,
-        subjectId: selectedCourse.id,
+        subjectId: selectedCourse.subjectId,
         room: "",
         professor: selectedCourse.professor,
         duration: durationHours,
@@ -378,7 +416,7 @@ export default function CalendarCreate() {
     const eventEnd = new Date(selectedEvent.end);
     const dayOfWeek = eventStart.getDay() === 0 ? 7 : eventStart.getDay();
 
-    // 1️⃣ Verifica conflitos de sala específicos (visuais) — ANTES de adicionar ao buffer
+    // 1️⃣ Verifica conflitos de sala específicos (visuais)
     socket.emit("verificarConflitosSala", {
       roomId: room.id,
       eventStart: eventStart.toISOString(),
@@ -388,17 +426,17 @@ export default function CalendarCreate() {
     });
 
     socket.once("respostaConflitosSala", async ({ blocos }) => {
-      // Base: início da semana atual no calendário (segunda-feira)
+      // Calcular base da semana para posicionar blocos no calendário
       const calendarApi = calendarRef.current?.getApi();
       const baseDate = calendarApi
         ? new Date(calendarApi.view.currentStart)
         : new Date();
-
       const baseMonday = new Date(baseDate);
-      baseMonday.setDate(baseMonday.getDate() - baseMonday.getDay() + 1); // segunda
+      baseMonday.setDate(baseMonday.getDate() - baseMonday.getDay() + 1);
 
+      // Mapear blocos para eventos de conflito
       const conflitos = blocos.map((bloco, idx) => {
-        const dayOffset = bloco.DayOfWeek ? bloco.DayOfWeek - 1 : 0; // 1 = segunda
+        const dayOffset = bloco.DayOfWeek ? bloco.DayOfWeek - 1 : 0;
         const [startH, startM] = bloco.StartHour.split(":");
         const [endH, endM] = bloco.EndHour.split(":");
 
@@ -427,7 +465,10 @@ export default function CalendarCreate() {
           classNames: [isConflict ? "evento-conflito" : "evento-ocupado"],
         };
       });
+  console.log(conflitos)
       setEventosConflito(conflitos);
+    
+
       if (conflitos.length > 0) {
         setMessage({
           text: "Esta sala já tem conflitos neste horário!",
@@ -436,76 +477,121 @@ export default function CalendarCreate() {
         return;
       }
 
-      // 2️⃣ Agora sim — adiciona ao buffer
-      const dataToBuffer = {
-        roomId: room.id,
-        professorName: professor,
-        eventStart,
-        eventEnd,
-        dayOfWeek,
-      };
+      // Verifica conflitos do professor
+      socket.emit("verificarConflitosProfessor", {
+        professorId: selectedCourse.professorId,
+        eventStart: eventStart.toISOString(),
+        eventEnd: eventEnd.toISOString(),
+        scheduleStartDate: new Date(startDate).toISOString(),
+        scheduleEndDate: new Date(endDate).toISOString(),
+      });
 
-      const isSalaDisponivel = await new Promise((resolve) => {
+      socket.once("respostaConflitosProfessor", ({ blocos }) => {
+        const calendarApi = calendarRef.current?.getApi();
+        const baseDate = calendarApi
+          ? new Date(calendarApi.view.currentStart)
+          : new Date();
+        const baseMonday = new Date(baseDate);
+        baseMonday.setDate(baseMonday.getDate() - baseMonday.getDay() + 1);
+
+        const conflitosProfessor = blocos.map((bloco, idx) => {
+          const dayOffset = bloco.DayOfWeek ? bloco.DayOfWeek - 1 : 0;
+          const [startH, startM] = bloco.StartHour.split(":");
+          const [endH, endM] = bloco.EndHour.split(":");
+
+          const start = new Date(baseMonday);
+          start.setDate(baseMonday.getDate() + dayOffset);
+          start.setHours(+startH, +startM, 0, 0);
+
+          const end = new Date(baseMonday);
+          end.setDate(baseMonday.getDate() + dayOffset);
+          end.setHours(+endH, +endM, 0, 0);
+
+          const isConflict = bloco.IsConflict;
+
+          return {
+            id: `conflito-prof-${idx}`,
+            title: isConflict ? "Conflito" : "Ocupado",
+            start,
+            end,
+            backgroundColor: isConflict
+              ? "rgba(255, 0, 0, 0.5)"
+              : "rgba(128, 128, 128, 0.3)",
+            borderColor: isConflict ? "darkred" : "gray",
+            textColor: "white",
+            editable: false,
+            eventDisplay: "block",
+            classNames: [isConflict ? "evento-conflito" : "evento-ocupado"],
+          };
+        });
+console.log(conflitosProfessor)
+        setEventosConflito(conflitosProfessor);
+
+        const hasConflictProfessor = blocos.some((b) => b.IsConflict);
+        if (hasConflictProfessor) {
+          setMessage({
+            text: "Este professor já tem aulas nesse horário!",
+            type: "danger",
+          });
+          return;
+        }
+
+        // Se não houve conflito, adiciona ao buffer e atualiza estado
+        const startHour = eventStart.toTimeString().slice(0, 8);
+        const endHour = eventEnd.toTimeString().slice(0, 8);
+        const dataToBuffer = {
+          roomId: room.id,
+          professorName: professor,
+          startHour,
+          endHour,
+          dayOfWeek,
+        };
+
         socket.emit("adicionarSala", dataToBuffer);
         socket.once("respostaBuffer", (resposta) => {
           if (resposta.status === "ok") {
-            resolve(true);
+            // Verifica conflitos locais no frontend
+            const roomConflict = events.some((event) => {
+              if (parseInt(event.id) === parseInt(selectedEvent.id))
+                return false;
+              const start = new Date(event.start);
+              const end = new Date(event.end);
+              return (
+                event.extendedProps.room === selectedRoom &&
+                start < eventEnd &&
+                end > eventStart
+              );
+            });
+
+            if (roomConflict) {
+              setMessage({
+                text: "Conflito local: esta sala já está ocupada.",
+                type: "danger",
+              });
+              return;
+            }
+
+            setEvents([
+              ...events,
+              {
+                ...selectedEvent,
+                title: `${selectedCourse.name} - ${roomName} - ${professor}`,
+                extendedProps: {
+                  ...selectedEvent.extendedProps,
+                  room: selectedRoom,
+                },
+              },
+            ]);
+            setShowRoomModal(false);
+            setMessage({
+              text: "Sala atribuída com sucesso!",
+              type: "success",
+            });
           } else {
             setMessage({ text: resposta.motivo, type: "danger" });
-            resolve(false);
           }
         });
       });
-
-      if (!isSalaDisponivel) return;
-
-      // 3️⃣ Verificação local redundante
-      const roomConflict = events.some((event) => {
-        if (parseInt(event.id) === parseInt(selectedEvent.id)) return false;
-        const start = new Date(event.start);
-        const end = new Date(event.end);
-        return (
-          event.extendedProps.room === selectedRoom &&
-          start < eventEnd &&
-          end > eventStart
-        );
-      });
-
-      if (roomConflict) {
-        setMessage({
-          text: "Conflito local: esta sala já está ocupada.",
-          type: "danger",
-        });
-        return;
-      }
-
-      // 4️⃣ Verifica blocos globais no intervalo total (não específicos da sala)
-      try {
-        const overlappingBlocks = await fetchOverlappingBlocks({
-          start: new Date(startDate).toISOString(),
-          end: new Date(endDate).toISOString(),
-        });
-        console.log("Blocos sobrepostos (globais):", overlappingBlocks);
-        // Opcional: visualização futura
-      } catch (err) {
-        console.error("Erro ao buscar blocos sobrepostos:", err);
-      }
-
-      // 5️⃣ Tudo OK: atribuir sala
-      setEvents([
-        ...events,
-        {
-          ...selectedEvent,
-          title: `${selectedCourse.name} - ${roomName} - ${professor}`,
-          extendedProps: {
-            ...selectedEvent.extendedProps,
-            room: selectedRoom,
-          },
-        },
-      ]);
-
-      setShowRoomModal(false);
-      setMessage({ text: "Sala atribuída com sucesso!", type: "success" });
     });
   };
 
@@ -526,12 +612,14 @@ export default function CalendarCreate() {
       )
     );
 
-    // Remove room from buffer
-    socket.emit("removerSala", {
-      roomId: parseInt(selectedEvent.extendedProps.room),
-      eventStart: new Date(selectedEvent.start).toISOString(),
-      eventEnd: new Date(selectedEvent.end).toISOString(),
-    });
+ socket.emit("removerSala", {
+  roomId: parseInt(selectedEvent.extendedProps.room),
+  dayOfWeek: new Date(selectedEvent.start).getDay() === 0 ? 7 : new Date(selectedEvent.start).getDay(),
+  startHour: new Date(selectedEvent.start).toTimeString().slice(0, 8), // HH:mm:ss
+  endHour: new Date(selectedEvent.end).toTimeString().slice(0, 8),     // HH:mm:ss
+  professorName: selectedEvent.extendedProps.professor || "",         // se for necessário
+});
+
 
     setEvents(
       events.filter((e) => parseInt(e.id) !== parseInt(selectedEvent.id))
@@ -567,7 +655,7 @@ export default function CalendarCreate() {
     const user = JSON.parse(localStorage.getItem("user")); // transforma de string para objeto
 
     const scheduleList = events.map((event) => ({
-      subjectId: event.extendedProps.courseId,
+      subjectId: event.extendedProps.subjectId,
       scheduleId: scheduleId,
       classroomId: event.extendedProps.room,
       startHour: new Date(event.start)
@@ -582,7 +670,7 @@ export default function CalendarCreate() {
       dayOfWeek: new Date(event.start).getDay(),
     }));
 
-    console.log(scheduleList);
+    console.log("ola", scheduleList);
 
     //Remove from the buffer the blocks of the schedule
     // When a schedule is saved, we need to remove the blocks from the buffer
