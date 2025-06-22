@@ -1,0 +1,442 @@
+﻿@use '../../../styles/variables' as *;
+
+/* ===== MAIN LAYOUT ===== */
+.mainContainer {
+  background-color: #ffffff;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ===== TYPOGRAPHY ===== */
+.headerText {
+  color: #b25d31;
+  margin-bottom: 30px;
+  font-weight: 500;
+}
+
+.instituteName {
+  margin-left: 15px;
+  color: #333;
+}
+
+/* ===== CARDS & CONTAINERS ===== */
+.card {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.card .card-body {
+  padding: 1rem;
+  overflow-x: hidden;
+}
+
+.cardHeader {
+  background-color: #f8f9fa;
+  color: #b25d31;
+  font-weight: 500;
+  border: none;
+}
+
+/* ===== BUTTONS ===== */
+.button {
+  background-color: #b25d31;
+  border-color: #b25d31;
+  color: white;
+  font-weight: 400;
+}
+
+/* ===== FORM CONTROLS ===== */
+.formControl {
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 8px 12px;
+}
+
+/* ===== SEARCH FUNCTIONALITY ===== */
+.search-input {
+  margin-bottom: 15px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+
+  &:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+}
+
+.search-input-custom {
+  padding-left: 35px !important;
+}
+
+.search-icon {
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.clear-search-button {
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ===== BADGES & LABELS ===== */
+.professor-badge {
+  color: #888;
+}
+
+.tipology-badge {
+  color: #666;
+  font-size: 0.85em;
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+/* ===== SCHEDULE INFO ===== */
+.schedule-info {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+  h4 {
+    color: #333;
+    font-weight: 600;
+  }
+
+  p {
+    color: #666;
+    font-size: 0.9rem;
+  }
+}
+
+/* ===== PAGINATION - RESPONSIVE ===== */
+.pagination-simple {
+  gap: 2px;
+  flex-wrap: nowrap;
+  max-width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination-btn {
+  min-width: 24px;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.3rem;
+  flex-shrink: 0;
+  border-width: 1px;
+}
+
+.pagination-info {
+  font-size: 0.7rem;
+  color: #666;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+
+/* ===== EDIT-SPECIFIC STYLES ===== */
+/* Edit icon on events */
+.edit-icon {
+  transition: all 0.2s ease;
+  opacity: 0.7;
+
+  &:hover {
+    color: #007bff !important;
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* Event hover effects for editing */
+.fc-event {
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+}
+
+/* Modal customizations */
+.modal-header.cardHeader {
+  background-color: #f8f9fa;
+  color: #b25d31;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-body {
+  padding: 1.5rem;
+
+  p {
+    margin-bottom: 0.75rem;
+
+    strong {
+      color: #333;
+      font-weight: 600;
+    }
+  }
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+
+  .btn {
+    margin-left: 0.5rem;
+  }
+}
+
+/* Course selection styling */
+.course-selection {
+  .form-check {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #f8f9fa;
+      border-color: #b25d31;
+    }
+
+    input[type="radio"]:checked + label {
+      color: #b25d31;
+      font-weight: 500;
+    }
+  }
+}
+
+/* Statistics cards */
+.stats-card {
+  text-align: center;
+
+  h4 {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  small {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+}
+
+/* Instructions styling */
+.instructions-list {
+  ol {
+    padding-left: 1.25rem;
+
+    li {
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+      color: #495057;
+    }
+  }
+}
+
+/* Alert customizations */
+.alert {
+  border-radius: 0.375rem;
+
+  &.alert-info {
+    background-color: #e7f3ff;
+    border-color: #b8daff;
+    color: #0c5460;
+  }
+
+  &.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+  }
+
+  &.alert-success {
+    background-color: #d1edff;
+    border-color: #9fcdff;
+    color: #0f5132;
+  }
+
+  &.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f1aeb5;
+    color: #721c24;
+  }
+}
+
+/* Save button area */
+.save-section {
+  background-color: #f8f9fa;
+  border-radius: 0.375rem;
+  padding: 1.5rem;
+  margin-top: 2rem;
+
+  .alert {
+    margin-bottom: 1rem;
+  }
+
+  .btn {
+    min-width: 150px;
+    font-weight: 500;
+  }
+}
+
+/* ===== THIRD-PARTY OVERRIDES ===== */
+/* FullCalendar customization */
+.fc-day-today {
+  background-color: transparent !important;
+}
+
+/* Conflict events styling */
+.fc-event.evento-conflito {
+  font-weight: bold;
+  opacity: 0.85;
+  pointer-events: none;
+  border: 2px dashed #dc3545 !important;
+}
+
+.fc-event.evento-ocupado {
+  opacity: 0.6;
+  pointer-events: none;
+  border: 1px solid #6c757d !important;
+}
+
+/* Calendar selection styling */
+.fc-highlight {
+  background-color: rgba(178, 93, 49, 0.1) !important;
+  border: 2px dashed #b25d31 !important;
+}
+
+/* Event content customization */
+.fc-event-title {
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.fc-event-time {
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+
+/* Mobile layout transition (under 1100px) */
+@media (max-width: 1100px) {
+  .row > [class*="col-"] {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  .mainContainer .row {
+    flex-direction: column;
+  }
+
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  .pagination-simple {
+    gap: 1px;
+  }
+
+  .pagination-btn {
+    min-width: 20px;
+    font-size: 0.65rem;
+    padding: 0.1rem 0.2rem;
+  }
+
+  .pagination-info {
+    font-size: 0.65rem;
+    margin: 0 2px;
+  }
+
+  .save-section {
+    padding: 1rem;
+
+    .row {
+      flex-direction: column;
+    }
+
+    .col-md-9, .col-md-3 {
+      width: 100% !important;
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+/* Small mobile (under 768px) */
+@media (max-width: 767px) {
+  .mainContainer {
+    padding: 15px;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .modal-footer {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+
+    .btn {
+      margin: 0.25rem 0;
+      width: 100%;
+    }
+  }
+
+  .stats-card {
+    margin-bottom: 1rem;
+  }
+
+  .edit-icon {
+    font-size: 14px !important;
+  }
+}
+
+/* Very small mobile (under 576px) */
+@media (max-width: 575px) {
+  .mainContainer {
+    padding: 10px;
+  }
+
+  .schedule-info {
+    padding: 1rem !important;
+
+    h4 {
+      font-size: 1.1rem;
+    }
+
+    .d-flex {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+
+  .instructions-list ol {
+    padding-left: 1rem;
+  }
+
+  .save-section {
+    padding: 0.75rem;
+  }
+}
+
+/* Extra small screens (under 400px) */
+@media (max-width: 399px) {
+  .mainContainer {
+    padding: 8px;
+  }
+
+  .card-body {
+    padding: 0.75rem;
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+}

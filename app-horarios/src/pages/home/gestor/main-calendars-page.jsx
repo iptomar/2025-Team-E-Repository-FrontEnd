@@ -12,10 +12,8 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import {
-  FiPlus,
-  FiEye,
-} from "react-icons/fi";
+import { FiPlus, FiEye, FiEdit } from "react-icons/fi";
+
 import {
   FaChalkboardTeacher,
   FaCalendarAlt,
@@ -59,6 +57,9 @@ export default function CalendarListing() {
 
   const handleViewSchedule = (scheduleId) => {
     navigate(`/calendar/${scheduleId}/view`);
+  };
+  const handleEditSchedule = (scheduleId) => {
+    navigate(`/calendar/${scheduleId}/edit`);
   };
 
   useEffect(() => {
@@ -239,43 +240,54 @@ export default function CalendarListing() {
       ) : calendars.length === 0 ? (
         <Alert variant="info">Nenhum horário encontrado.</Alert>
       ) : (
-        <ListGroup>
-          {calendars.map((cal) => (
-            <ListGroup.Item
-              key={cal.Id || cal.id}
-              className="d-flex justify-content-between align-items-center gap-3"
-              style={{ cursor: "pointer" }}
-              onClick={() => handleViewSchedule(cal.Id || cal.id)}
-            >
-              <div>
-                <h5 className="mb-1 d-flex align-items-center gap-2">
-                  <FaCalendarAlt className="icon-primary"/> {renderTextWithTooltip(cal.Name, "Nome do horário")}
-                </h5>
-                <div className="mt-2 d-flex flex-row flex-wrap gap-4">
-                  {renderWithTooltip(<FaGraduationCap className="icon-primary" />, "Ano Curricular", cal.CurricularYear)}
-                  {renderWithTooltip(<FaChalkboardTeacher className="icon-primary" />, "Turma", cal.Class)}
-                  {renderWithTooltip(<FaBook className="icon-primary" />, "Curso", cal.CourseName)}
-                  {renderWithTooltip(<FaCalendarPlus className="icon-primary" />, "Data de início", new Date(cal.StartDate).toLocaleDateString("pt-PT"))}
-                  {renderWithTooltip(<FaCalendarCheck className="icon-primary" />, "Data de fim", new Date(cal.EndDate).toLocaleDateString("pt-PT"))}
-                  {renderWithTooltip(<FaCalendarAlt className="icon-primary" />, "Data de criação", new Date(cal.CreatedOn).toLocaleDateString("pt-PT"))}
-                </div>
-              </div>
-              <div>
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleViewSchedule(cal.Id || cal.id);
-                  }}
-                  className="d-flex align-items-center gap-2"
+          <ListGroup>
+            {calendars.map((cal) => (
+                <ListGroup.Item
+                    key={cal.Id || cal.id}
+                    className="d-flex justify-content-between align-items-center gap-3"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleViewSchedule(cal.Id || cal.id)}
                 >
-                  <FiEye /> Ver
-                </Button>
-              </div>
-            </ListGroup.Item>
-          ))}
-        </ListGroup>
+                  <div>
+                    <h5 className="mb-1 d-flex align-items-center gap-2">
+                      <FaCalendarAlt className="icon-primary"/> {renderTextWithTooltip(cal.Name, "Nome do horário")}
+                    </h5>
+                    <div className="mt-2 d-flex flex-row flex-wrap gap-4">
+                      {renderWithTooltip(<FaGraduationCap className="icon-primary" />, "Ano Curricular", cal.CurricularYear)}
+                      {renderWithTooltip(<FaChalkboardTeacher className="icon-primary" />, "Turma", cal.Class)}
+                      {renderWithTooltip(<FaBook className="icon-primary" />, "Curso", cal.CourseName)}
+                      {renderWithTooltip(<FaCalendarPlus className="icon-primary" />, "Data de início", new Date(cal.StartDate).toLocaleDateString("pt-PT"))}
+                      {renderWithTooltip(<FaCalendarCheck className="icon-primary" />, "Data de fim", new Date(cal.EndDate).toLocaleDateString("pt-PT"))}
+                      {renderWithTooltip(<FaCalendarAlt className="icon-primary" />, "Data de criação", new Date(cal.CreatedOn).toLocaleDateString("pt-PT"))}
+                    </div>
+                  </div>
+                  <div className="d-flex gap-2">
+                    <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditSchedule(cal.Id || cal.id);
+                        }}
+                        className="d-flex align-items-center gap-2"
+                    >
+                      <FiEdit /> Editar
+                    </Button>
+                    <Button
+                        variant="outline-primary"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewSchedule(cal.Id || cal.id);
+                        }}
+                        className="d-flex align-items-center gap-2"
+                    >
+                      <FiEye /> Ver
+                    </Button>
+                  </div>
+                </ListGroup.Item>
+            ))}
+          </ListGroup>
       )}
 
       {!loading && totalPages > 1 && (

@@ -29,6 +29,7 @@ import {
   FaCalendarPlus,
   FaCalendarCheck,
 } from "react-icons/fa";
+import {toLocalISOString} from "../../../lib/utlity/utility.js";
 
 /**
  * CalendarCreate Component
@@ -427,8 +428,8 @@ export default function CalendarCreate() {
     // 1️⃣ Verifica conflitos de sala específicos (visuais)
     socket.emit("verificarConflitosSala", {
       roomId: room.id,
-      eventStart: eventStart.toISOString(),
-      eventEnd: eventEnd.toISOString(),
+      eventStart: toLocalISOString(new Date(selectedEvent.start)),
+      eventEnd: toLocalISOString(new Date(selectedEvent.end)),
       scheduleStartDate: new Date(startDate).toISOString(),
       scheduleEndDate: new Date(endDate).toISOString(),
     });
@@ -488,8 +489,8 @@ export default function CalendarCreate() {
       // Verifica conflitos do professor
       socket.emit("verificarConflitosProfessor", {
         professorId: selectedCourse.professorId,
-        eventStart: eventStart.toISOString(),
-        eventEnd: eventEnd.toISOString(),
+        eventStart: toLocalISOString(new Date(event.start)),
+        eventEnd: toLocalISOString(new Date(event.end)),
         scheduleStartDate: new Date(startDate).toISOString(),
         scheduleEndDate: new Date(endDate).toISOString(),
       });
@@ -674,14 +675,12 @@ export default function CalendarCreate() {
       subjectId: event.extendedProps.subjectId,
       scheduleId: scheduleId,
       classroomId: event.extendedProps.room,
-      startHour: new Date(event.start)
-        .toISOString()
-        .replace("T", " ")
-        .substring(0, 19),
-      endHour: new Date(event.end)
-        .toISOString()
-        .replace("T", " ")
-        .substring(0, 19),
+      startHour: toLocalISOString(new Date(event.start))
+          .replace("T", " ")
+          .substring(0, 19),
+      endHour: toLocalISOString(new Date(event.end))
+          .replace("T", " ")
+          .substring(0, 19),
       createdBy: user.email,
       dayOfWeek: new Date(event.start).getDay(),
     }));

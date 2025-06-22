@@ -31,16 +31,24 @@ const API_BASE = import.meta.env.VITE_WS_URL;
  * console.log(subjects[0].Subject); // "Networking II"
  */
 export const fetchSubjectsWithProfessors = async (year) => {
-  const url = new URL(`${API_BASE}/api/admin/subjects-professors`);
-  if (year) url.searchParams.append('year', year); // já espera o valor tipo "1º Ano"
+    const response = await fetch(`${API_BASE}/api/admin/subjects-professors${year ? `?year=${year}` : ''}`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            "Content-Type": "application/json",
+        },
+    });
 
-  const response = await axios.get(url.toString(), {
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    const data = await response.json();
+
+    console.log("=== API RESPONSE ===");
+    console.log("Response status:", response.status);
+    console.log("Response data:", data);
+
+    if (!response.ok) {
+        throw new Error(data.message || "Erro ao buscar disciplinas");
     }
-  });
 
-  return response.data;
+    return data;
 };
 
 
