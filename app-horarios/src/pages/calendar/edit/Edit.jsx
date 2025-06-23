@@ -165,14 +165,16 @@ export default function CalendarEdit() {
                 const [scheduleData, classrooms] = await Promise.all([
                     fetchScheduleById(scheduleId, token),
                     fetchClassrooms(),
-                    fetchSubjectsWithProfessors()
                 ]);
-                const [subjects] = await Promise.all([
-                    fetchSubjectsWithProfessors(scheduleData.CurricularYear)
-                ]);
-                console.log("=== RAW SUBJECTS DATA ===");
-                console.log("Subjects received:", subjects);
-                console.log("Number of subjects:", subjects.length);
+                console.log("=== EDIT PAGE SUBJECTS DEBUG ===");
+                const subjects = await fetchSubjectsWithProfessors(scheduleData.CurricularYear); // No year filter
+                console.log("Raw API response:", subjects);
+
+                // Check specific subject IDs
+                const subject7 = subjects.find(s => s.Id === 7);
+                const subject4 = subjects.find(s => s.Id === 4);
+                console.log("Subject ID 7:", subject7);
+                console.log("Subject ID 4:", subject4);
 
                 // Check each subject individually
                 subjects.forEach((subject, index) => {
@@ -193,7 +195,7 @@ export default function CalendarEdit() {
                 const transformedCourses = subjects.map((subject, index) => {
                     const course = {
                         id: subject.Id,
-                        subjectId: subject.IdSubject,
+                        subjectId: subject.Id, // ✅ Use subject.Id instead of subject.IdSubject
                         name: subject.Subject,
                         professorId: subject.professorId,
                         professor: subject.Professor,
@@ -202,17 +204,9 @@ export default function CalendarEdit() {
                     };
 
                     console.log(`Transformed course ${index}:`, course);
-
-                    // Check for undefined values
-                    if (!course.name) {
-                        console.warn(`Course ${index} has undefined name:`, subject);
-                    }
-                    if (!course.professor) {
-                        console.warn(`Course ${index} has undefined professor:`, subject);
-                    }
-
                     return course;
                 });
+
 
                 console.log("=== FINAL TRANSFORMED COURSES ===");
                 console.log("Transformed courses:", transformedCourses);
@@ -243,7 +237,7 @@ export default function CalendarEdit() {
 
                     return {
                         id: b.Id,
-                        title: `${b.SubjectName} - ${b.ClassroomName || room?.Name || "Sem sala"} - ${subj?.Professor || "N/A"}`,
+                        title: `${subj?.Subject || b.SubjectName} - ${b.ClassroomName || room?.Name || "Sem sala"} - ${subj?.Professor || "N/A"}`,
                         start,
                         end,
                         backgroundColor: tipologyColor(subj?.Tipologia),
@@ -255,11 +249,12 @@ export default function CalendarEdit() {
                             classroom: b.ClassroomName || room?.Name || "Sem sala",
                             classroomId: b.ClassroomFK,
                             tipologia: subj?.Tipologia || "N/A",
-                            courseId: subj?.Id || null, // ✅ FIXED: Use the subject's ID from the courses list
+                            courseId: subj?.Id || null,
                             room: b.ClassroomFK?.toString() || "",
                             isOriginal: true,
                         },
                     };
+
                 }) ?? [];
 
                 setEvents(evts);
@@ -591,8 +586,11 @@ export default function CalendarEdit() {
 
                 socket.once("respostaBuffer", (resposta) => {
                     if (resposta.status === "ok") {
+                        // Use event ID for new events, blockId for existing events
+                        const eventKey = selectedEvent.extendedProps.blockId || selectedEvent.id;
+
                         // Store the room update in ref
-                        roomUpdates.current[selectedEvent.extendedProps.blockId] = {
+                        roomUpdates.current[eventKey] = {
                             roomId: selectedRoom,
                             roomName: roomName,
                             classroomId: parseInt(selectedRoom)
@@ -601,9 +599,24 @@ export default function CalendarEdit() {
                         console.log("Stored room update:", roomUpdates.current);
 
                         if (selectedEvent.isNew) {
-                            // ... existing new event logic
+                            // Add new event logic
+                            const newEventData = {
+                                ...selectedEvent,
+                                id: `event-${Date.now()}-${Math.random()}`,
+                                isNew: true,
+                                title: `${selectedCourse.name} - ${roomName} - ${selectedCourse.professor}`,
+                                extendedProps: {
+                                    ...selectedEvent.extendedProps,
+                                    classroomId: parseInt(selectedRoom),
+                                    classroom: roomName,
+                                    room: selectedRoom.toString(),
+                                },
+                            };
+
+                            setEvents(prevEvents => [...prevEvents, newEventData]);
+                            setMessage({ text: "Nova aula adicionada com sucesso!", type: "success" });
                         } else {
-                            // Try to update the visual state (this might not work, but we have backup)
+                            // Update existing event logic
                             setEvents(prevEvents =>
                                 prevEvents.map((event) =>
                                     event.extendedProps.blockId === selectedEvent.extendedProps.blockId
@@ -628,6 +641,7 @@ export default function CalendarEdit() {
                         setMessage({ text: resposta.motivo, type: "danger" });
                     }
                 });
+
             });
         });
     };
@@ -768,9 +782,10 @@ export default function CalendarEdit() {
 
 
             for (const event of updatedEvents) {
+                // In saveSchedule, modify the updateData creation:
                 const updateData = {
                     subjectId: event.extendedProps.subjectId,
-                    classroomId: roomUpdates.current[event.extendedProps.blockId]?.classroomId ||
+                    classroomId: roomUpdates.current[event.extendedProps.blockId || event.id]?.classroomId ||
                         event.extendedProps.room ||
                         event.extendedProps.classroomId,
                     startHour: toLocalISOString(new Date(event.start))
@@ -783,9 +798,10 @@ export default function CalendarEdit() {
                 };
 
                 console.log("=== ROOM UPDATE CHECK ===");
-                console.log("Block ID:", event.extendedProps.blockId);
-                console.log("Room update from ref:", roomUpdates.current[event.extendedProps.blockId]);
+                console.log("Event key:", event.extendedProps.blockId || event.id);
+                console.log("Room update from ref:", roomUpdates.current[event.extendedProps.blockId || event.id]);
                 console.log("Final classroomId being sent:", updateData.classroomId);
+
 
                 console.log("=== FRONTEND UPDATE DEBUG ===");
                 console.log("Event being updated:", event);
@@ -828,11 +844,11 @@ export default function CalendarEdit() {
 
             setMessage({ text: "Horário atualizado com sucesso!", type: "success" });
 
-            /*
-            *setTimeout(() => {
+
+            setTimeout(() => {
                 navigate(`/calendar/${scheduleId}/view`);
             }, 1500);
-            * */
+
 
         } catch (error) {
             console.error("Erro ao guardar horário:", error);
