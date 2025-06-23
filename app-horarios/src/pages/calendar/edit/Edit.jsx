@@ -162,12 +162,14 @@ export default function CalendarEdit() {
                 setLoading(true);
                 const token = localStorage.getItem("token");
 
-                const [scheduleData, classrooms, subjects] = await Promise.all([
+                const [scheduleData, classrooms] = await Promise.all([
                     fetchScheduleById(scheduleId, token),
                     fetchClassrooms(),
                     fetchSubjectsWithProfessors()
                 ]);
-
+                const [subjects] = await Promise.all([
+                    fetchSubjectsWithProfessors(scheduleData.CurricularYear)
+                ]);
                 console.log("=== RAW SUBJECTS DATA ===");
                 console.log("Subjects received:", subjects);
                 console.log("Number of subjects:", subjects.length);
