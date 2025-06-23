@@ -16,6 +16,8 @@ export const ROUTES = {
     CALENDAR_CREATE: "create",
     /** Calendar view page with dynamic schedule ID */
     CALENDAR_VIEW: ":scheduleId/view",
+    /** Calendar edit page with dynamic schedule ID */
+    CALENDAR_EDIT: ":scheduleId/edit",
 
     /** Backoffice section root path */
     BACKOFFICE_ROOT: "backoffice/",

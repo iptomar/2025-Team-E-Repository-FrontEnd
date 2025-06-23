@@ -54,26 +54,28 @@ export const createEvent = async (scheduleId, token, event) => {
 };
 
 
-// Update an existing event
-export const updateEvent = async (token, eventId, updatedEvent) => {
-    const response = await fetch(`${API_BASE}/api/calendar/events/${eventId}`, {
-        method: 'PUT', // or 'PATCH' if partial updates
+// Update an event
+export const updateEvent = async (token, eventId, updateEvent) => {
+    const response = await fetch(`${API_BASE}/api/schedules/blocks/${eventId}`, {
+        method: 'PUT',
         headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedEvent),
+        body: JSON.stringify(updateEvent),
     });
     const data = await response.json();
     if (!response.ok) {
-        throw new Error(data.message || 'Erro ao atualizar evento');
+        throw new Error(data.message || 'Erro ao atualizar bloco');
     }
     return data;
 };
 
+
 // Delete an event
+// Delete a block (updated to match your backend route)
 export const deleteEvent = async (token, eventId) => {
-    const response = await fetch(`${API_BASE}/api/calendar/events/${eventId}`, {
+    const response = await fetch(`${API_BASE}/api/schedules/blocks/${eventId}`, {
         method: 'DELETE',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -82,10 +84,11 @@ export const deleteEvent = async (token, eventId) => {
     });
     if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || 'Erro ao apagar evento');
+        throw new Error(data.message || 'Erro ao apagar bloco');
     }
     return true;
 };
+
 
 // Create schedule
 export const createSchedule = async ({ courseId, name, startDate, endDate, curricularYear, class: className }) => {
@@ -167,4 +170,22 @@ export const fetchScheduleById = async (scheduleId, token) => {
         throw new Error(data.message || 'Erro ao buscar horário');
     }
     return data;
+};
+
+// Delete a schedule
+export const deleteSchedule = async (token, scheduleId) => {
+    const response = await fetch(`${API_BASE}/api/schedules/${scheduleId}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Erro ao apagar horário');
+    }
+
+    return true;
 };
