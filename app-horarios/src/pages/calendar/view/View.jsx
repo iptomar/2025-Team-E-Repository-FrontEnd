@@ -65,68 +65,84 @@ export default function CalendarView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  /* ------------------ Fetch ------------------ */
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
-        const sched = await fetchScheduleById(scheduleId, token);
-        const classrooms = await fetchClassrooms();
-        const subjects = await fetchSubjectsWithProfessors(
-            sched.CurricularYear
-        );
+  const fetchAll = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
 
-        /* blocks → events */
-        const startWeek = weekStartOf(new Date());
-        console.log("Blocos recebidos no horário:", sched.blocks);
-        const evts =
-            sched.blocks?.map((b) => {
-              const subj = subjects.find((s) => s.Id === b.SubjectFK);
-              const room = classrooms.find((c) => c.Id === b.ClassroomFK);
+      const [sched, classrooms] = await Promise.all([
+        fetchScheduleById(scheduleId, token),
+        fetchClassrooms(),
+      ]);
 
-              const dow = b.DayOfWeek ?? 1;
-              const baseDate = new Date(startWeek);
-              baseDate.setDate(startWeek.getDate() + (dow - 1));
+      const subjects = await fetchSubjectsWithProfessors(sched.CurricularYear);
 
-              const [sh, sm] = b.StartHour.split(":");
-              const [eh, em] = b.EndHour.split(":");
+      // Transform subjects → courses
+      const colorPalette = ["#b25d31", "#5d9b42", "#4285f4", "#aa46bb", "#f4b400"];
+      const transformedCourses = subjects.map((subject, index) => ({
+        id: subject.Id,
+        subjectId: subject.Id,
+        name: subject.Subject,
+        professorId: subject.professorId,
+        professor: subject.Professor,
+        type: subject.Tipologia,
+        color: colorPalette[index % colorPalette.length],
+      }));
 
-              const start = new Date(baseDate);
-              start.setHours(+sh, +sm, 0, 0);
-              const end = new Date(baseDate);
-              end.setHours(+eh, +em, 0, 0);
+      // Convert blocks to events
+      const startWeek = weekStartOf(new Date());
+      const evts = sched.blocks?.map((b) => {
+        const subj = subjects.find((s) => s.Id === b.SubjectFK);
+        const room = classrooms.find((c) => c.Id === b.ClassroomFK);
 
-              return {
-                id: b.Id,
-                title: `${b.SubjectName} - ${
-                    b.ClassroomName || room?.Name || "Sem sala"
-                } - ${subj?.Professor || "N/A"}`,
-                start,
-                end,
-                backgroundColor: tipologyColor(subj?.Tipologia),
-                borderColor: tipologyColor(subj?.Tipologia),
-                extendedProps: {
-                  professor: subj?.Professor || "N/A",
-                  classroom:
-                      b.ClassroomName || room?.Name || `Sala ${b.ClassroomFK}`,
-                  tipologia: subj?.Tipologia || "N/A",
-                },
-              };
-            }) ?? [];
+        const dow = b.DayOfWeek ?? 1;
+        const baseDate = new Date(startWeek);
+        baseDate.setDate(startWeek.getDate() + (dow - 1));
 
-        setSchedule(sched);
-        setEvents(evts);
-        console.log("Eventos carregados:", evts.length, evts);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+        const [sh, sm] = b.StartHour.split(":");
+        const [eh, em] = b.EndHour.split(":");
 
-    fetchAll();
-  }, [scheduleId]);
+        const start = new Date(baseDate);
+        start.setHours(+sh, +sm, 0, 0);
+        const end = new Date(baseDate);
+        end.setHours(+eh, +em, 0, 0);
+
+        return {
+          id: b.Id,
+          title: `${subj?.Subject || b.SubjectName} - ${b.ClassroomName || room?.Name || "Sem sala"} - ${subj?.Professor || "N/A"}`,
+          start,
+          end,
+          backgroundColor: tipologyColor(subj?.Tipologia),
+          borderColor: tipologyColor(subj?.Tipologia),
+          extendedProps: {
+            blockId: b.Id,
+            subjectId: b.SubjectFK,
+            professor: subj?.Professor || "N/A",
+            professorId: subj?.professorId || null,
+            classroom: b.ClassroomName || room?.Name || `Sala ${b.ClassroomFK}`,
+            classroomId: b.ClassroomFK,
+            tipologia: subj?.Tipologia || "N/A",
+            courseId: subj?.Id || null,
+            room: b.ClassroomFK?.toString() || "",
+            isOriginal: true,
+          },
+        };
+      }) ?? [];
+
+      setSchedule(sched);
+      setEvents(evts);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchAll();
+}, [scheduleId]);
+
+
 
   /* ------------------ UI States ------------------ */
   if (loading) {
