@@ -24,6 +24,27 @@ const CreateCalendarModal = ({ show, onHide, onSubmit }) => {
     loadCourses();
   }, []);
 
+  const handleStartDateChange = (e) => {
+    const date = new Date(e.target.value);
+    if (date.getDay() !== 1) {
+      alert("A data de início tem de ser uma segunda-feira.");
+      setStartDate('');
+    } else {
+      setStartDate(e.target.value);
+    }
+  };
+
+  const handleEndDateChange = (e) => {
+    const date = new Date(e.target.value);
+    if (date.getDay() !== 6) {
+      alert("A data de fim tem de ser um sábado.");
+      setEndDate('');
+    } else {
+      setEndDate(e.target.value);
+    }
+  };
+
+
   const handleFormSubmit = () => {
     onSubmit({
       courseId: selectedCourse,
@@ -109,7 +130,7 @@ const CreateCalendarModal = ({ show, onHide, onSubmit }) => {
             <Form.Control
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={handleStartDateChange}
             />
           </Form.Group>
 
@@ -118,9 +139,10 @@ const CreateCalendarModal = ({ show, onHide, onSubmit }) => {
             <Form.Control
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={handleEndDateChange}
             />
           </Form.Group>
+
         </Form>
       </Modal.Body>
       <Modal.Footer>
