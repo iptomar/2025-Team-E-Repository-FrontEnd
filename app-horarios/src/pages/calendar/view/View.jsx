@@ -65,10 +65,19 @@ export default function CalendarView() {
         const sched = await fetchScheduleById(scheduleId, token);
         const classrooms = await fetchClassrooms();
         const subjects = await fetchSubjectsWithProfessors(sched.CurricularYear);
-
+         // Check each subject individually
+        subjects.forEach((subject, index) => {
+          console.log(`Subject ${index}:`, {
+            Id: subject.Id,
+            Subject: subject.IdSubject,
+            Professor: subject.Professor,
+            Tipologia: subject.Tipologia,
+            professorId: subject.professorId,
+          });
+        });
         const startWeek = weekStartOf(new Date());
         const evts = sched.blocks?.map((b) => {
-          const subj = subjects.find((s) => s.Id === b.SubjectFK);
+          const subj = subjects.find((s) => s.IdSubject === b.SubjectFK);
           const room = classrooms.find((c) => c.Id === b.ClassroomFK);
 
           const dow = b.DayOfWeek ?? 1;

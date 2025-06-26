@@ -228,7 +228,7 @@ export default function CalendarCreate() {
         const transformed = data.map((subject, index) => {
           const course = {
             id: subject.Id,
-            subjectId: subject.Id, // ✅ Changed from subject.IdSubject
+            subjectId: subject.IdSubject, // ✅ Changed from subject.IdSubject
             name: subject.Subject,
             professorId: subject.professorId,
             professor: subject.Professor,
@@ -277,10 +277,12 @@ export default function CalendarCreate() {
         console.log("Start week calculated:", startWeek);
 
         const evts = blocks.map((b, index) => {
+          console.log("tesaa", subjects)
           console.log(`=== PROCESSING BLOCK ${index} ===`);
           console.log("Block data:", b);
 
           const subj = subjects.find((s) => s.Id === b.SubjectFK);
+          console.log("subjectsss", subj)
           const room = classrooms.find((c) => c.Id === b.ClassroomFK);
 
           console.log("Found subject for block:", subj);
@@ -535,6 +537,7 @@ export default function CalendarCreate() {
       setMessage({ text: "Selecione uma sala para a aula", type: "warning" });
       return;
     }
+    const currentBlockId = selectedEvent.extendedProps.blockId ?? selectedEvent.id;
 
     const selectedCourse = courses.find(
         (c) => c.id === selectedEvent.extendedProps.courseId
@@ -561,6 +564,7 @@ export default function CalendarCreate() {
       eventEnd: toLocalISOString(eventEnd),
       scheduleStartDate: new Date(startDate).toISOString(),
       scheduleEndDate: new Date(endDate).toISOString(),
+      excludeBlockId: currentBlockId,
     };
 
     console.log("=== EMITTING ROOM CONFLICT CHECK ===");
@@ -623,15 +627,42 @@ export default function CalendarCreate() {
       console.log("Processed room conflicts:", conflitos);
       setEventosConflito(conflitos);
 
-      if (conflitos.length > 0) {
-        console.log("Room conflicts detected, stopping process");
-        setMessage({
-          text: "Esta sala já tem conflitos neste horário!",
-          type: "danger",
-        });
-        setShowRoomModal(false);
-        return;
-      }
+      // depois de detetares conflitos visuais:
+if (conflitos.length > 0) {
+  console.log("Room conflicts detected, stopping process");
+  setMessage({
+    text: "Esta sala já tem conflitos neste horário!",
+    type: "danger",
+  });
+
+  // 1️⃣ Desmarca o select no calendário
+  calendarRef.current.getApi().unselect();
+
+  // 2️⃣ Emite para o backend/remover do buffer
+  const { id, extendedProps } = selectedEvent;
+  const startHour  = new Date(selectedEvent.start).toTimeString().slice(0,8);
+  const endHour    = new Date(selectedEvent.end).toTimeString().slice(0,8);
+  const dayOfWeek  = new Date(selectedEvent.start).getDay() || 7;
+  const roomId     = parseInt(extendedProps.room, 10) || null;
+  const professor  = extendedProps.professor;
+
+  socket.emit("removerSala", {
+    roomId,
+    dayOfWeek,
+    startHour,
+    endHour,
+    professorName: professor,
+  });
+
+  // 3️⃣ Remove definitivamente do estado para desaparecer do calendário
+  setEvents(prev => prev.filter(e => String(e.id) !== String(id)));
+
+  // 4️⃣ Fecha o modal
+  setShowRoomModal(false);
+
+  return;
+}
+
 
       // Verifica conflitos do professor
       const professorConflictData = {
@@ -640,6 +671,8 @@ export default function CalendarCreate() {
         eventEnd: toLocalISOString(eventEnd),
         scheduleStartDate: new Date(startDate).toISOString(),
         scheduleEndDate: new Date(endDate).toISOString(),
+        excludeBlockId: currentBlockId,
+        subjectId: selectedCourse.subjectId,
       };
 
       console.log("=== EMITTING PROFESSOR CONFLICT CHECK ===");
@@ -699,16 +732,44 @@ export default function CalendarCreate() {
         const hasConflictProfessor = blocos.some((b) => b.IsConflict);
         console.log("Has professor conflict:", hasConflictProfessor);
 
-        if (hasConflictProfessor) {
-          console.log("Professor conflict detected, stopping process");
-          setMessage({
-            text: "Este professor já tem aulas nesse horário!",
-            type: "danger",
-          });
 
-          setShowRoomModal(false);
-          return;
-        }
+  // depois de receber respostaConflitosProfessor:
+if (hasConflictProfessor) {
+  console.log("Professor conflict detected, stopping process");
+  setMessage({
+    text: "Este professor já tem aulas nesse horário!",
+    type: "danger",
+  });
+
+  // 1️⃣ desmarca a seleção no calendário
+  calendarRef.current.getApi().unselect();
+
+  // 2️⃣ remove do buffer
+  const { id, extendedProps } = selectedEvent;
+  const startHour = new Date(selectedEvent.start).toTimeString().slice(0, 8);
+  const endHour   = new Date(selectedEvent.end).toTimeString().slice(0, 8);
+  const dayOfWeek = new Date(selectedEvent.start).getDay() || 7;
+  const roomId    = parseInt(extendedProps.room, 10) || null;
+  const professor = extendedProps.professor;
+
+  socket.emit("removerSala", {
+    roomId,
+    dayOfWeek,
+    startHour,
+    endHour,
+    professorName: professor,
+  });
+
+  // 3️⃣ remove do estado para desaparecer do calendário
+  setEvents(prev => prev.filter(e => String(e.id) !== String(id)));
+
+  // 4️⃣ fecha o modal
+  setShowRoomModal(false);
+
+  return;
+}
+
+
 
         selectedEvent.isNew = false;
         console.log("Marked event as not new:", selectedEvent);
@@ -717,6 +778,7 @@ export default function CalendarCreate() {
         const startHour = eventStart.toTimeString().slice(0, 8);
         const endHour = eventEnd.toTimeString().slice(0, 8);
         const dataToBuffer = {
+          blockId: selectedEvent.extendedProps.blockId ?? selectedEvent.id,
           roomId: room.id,
           professorName: professor,
           professorId: selectedCourse.professorId,
@@ -852,6 +914,17 @@ export default function CalendarCreate() {
       return;
     }
 
+    const hasAnyConflict = eventosConflito.some(
+      (ev) => ev.title === "Conflito"
+    );
+    if (hasAnyConflict) {
+      setMessage({
+        text: "Não podes guardar: existem conflitos de sala ou professor no horário!",
+        type: "danger",
+      });
+      return;
+    }
+
     const eventsWithoutRooms = events.filter(
         (event) => !event.extendedProps.room
     );
@@ -874,7 +947,7 @@ export default function CalendarCreate() {
 
     console.log("Token:", token);
     console.log("User:", user);
-
+    console.log("eventos",events)
     const scheduleList = events.map((event, index) => {
       const scheduleData = {
         subjectId: event.extendedProps.subjectId,
@@ -895,7 +968,7 @@ export default function CalendarCreate() {
       console.log("Available subject IDs:", courses.map(c => c.id));
 
       // Validate subject exists
-      if (!courses.find(c => c.id === scheduleData.subjectId)) {
+      if (!courses.find(c => c.IdSubject=== scheduleData.courseId)) {
         console.error("Subject ID not found in courses list!");
         throw new Error(`Subject ID ${scheduleData.subjectId} not found`);
       }
@@ -922,8 +995,8 @@ export default function CalendarCreate() {
       // Emit the event to remove the room from the buffer
       const removeData = {
         roomId: parseInt(event.extendedProps.room),
-        eventStart: new Date(event.start).toISOString(), // Full ISO string
-        eventEnd: new Date(event.end).toISOString(), // Full ISO string
+        eventStart: new Date(event.start), // Full ISO string
+        eventEnd: new Date(event.end), // Full ISO string
       };
 
       console.log(`Removing event ${index} from buffer:`, removeData);
